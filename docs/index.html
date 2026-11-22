@@ -9,100 +9,178 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
-  /* An old paper atlas: parchment, sepia ink, a pale sea, olive land and a terracotta accent. */
+  /* A modern, bright atlas: a light page, a deep-blue globe with green land, slate ink and a violet accent.
+     (--paper and friends keep their old names: they are the page's light background and panels.) */
   :root {
-    --paper: #EFE5CF;
-    --paper-hi: #F7F0DF;
-    --panel: #F9F3E4;
-    --ink: #3A2E22;
-    --dim: #4F4132;
-    --muted: #6E5E4A;
-    --line: rgba(58, 46, 34, 0.32);
-    --edge: rgba(58, 46, 34, 0.2);
-    --sea-hi: #DDE8E0;
-    --sea: #B7CEC5;
-    --sea-lo: #8FB0A7;
-    --land: #A9B07A;
-    --accent: #A8461C;                 /* recruiting: terracotta */
-    --glow: rgba(168, 70, 28, 0.24);
+    --paper: #F4F6FB;
+    --paper-hi: #FFFFFF;
+    --panel: #FFFFFF;
+    --ink: #111827;
+    --dim: #374151;
+    --muted: #64748B;
+    --line: rgba(17, 24, 39, 0.2);
+    --edge: rgba(17, 24, 39, 0.1);
+    --sea-hi: #1F4E8C;
+    --sea: #0F2D63;
+    --sea-lo: #06132E;
+    --land: #4ADE80;
+    --accent: #7C3AED;
+    --glow: rgba(124, 58, 237, 0.24);
+    --on-globe: #FFFFFF;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; color: var(--ink); font-family: 'Barlow', system-ui, sans-serif; }
   html {
     background-color: var(--paper);
-    /* faint paper grain and a darker, sun-worn edge */
-    background-image:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .23 0 0 0 0 .18 0 0 0 0 .13 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-      radial-gradient(ellipse at 50% 45%, var(--paper-hi) 0%, var(--paper) 55%, #E2D4B5 100%);
+    background-image: radial-gradient(ellipse at 50% 42%, #FFFFFF 0%, var(--paper) 55%, #E6ECF7 100%);
     background-attachment: fixed;
   }
   body { min-height: 100vh; display: flex; flex-direction: column; position: relative; }
-  /* the map's neatline: a double rule just inside the page edge */
-  body::before {
-    content: ""; position: fixed; inset: 10px; pointer-events: none; z-index: 0;
-    border: 1px solid var(--line); outline: 1px solid var(--edge); outline-offset: 4px;
-  }
+
   main, footer { position: relative; z-index: 1; }
-  .cond { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; }
+  .cond { font-family: 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   /* ---------- Ring (desktop / tablet) ---------- */
   #ring-view { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 28px 16px 16px; }
   #stage { position: relative; }
-  #ring { position: absolute; left: 0; top: 0; width: 1180px; height: 1020px; transform-origin: 0 0; }
+  #ring { position: absolute; left: 0; top: 0; width: 1180px; height: 1060px; transform-origin: 0 0; }
   #ring > svg.scale { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
   .scale .orbit { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 2 7; stroke-linecap: round; }
   .scale .rule { fill: none; stroke: var(--line); stroke-width: 1; }
   .scale .tick { stroke: var(--muted); stroke-width: 1; opacity: 0.6; }
   .scale .tick.major { stroke-width: 1.6; opacity: 0.9; }
-  .scale .season { font: 700 16px/1 'Cormorant Garamond', Georgia, serif; letter-spacing: 0.24em; text-transform: uppercase; fill: var(--muted); text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--paper); stroke-width: 8px; }
+  /* Only the chosen season's sports are on the ring; the others wait off it */
+  #ring .away { display: none !important; }
+  #ring .disc.enter, #ring .label.enter { animation: pop 0.32s ease-out both; }
+  @keyframes pop { from { opacity: 0; scale: 0.7; } }
+
+  /* The season picker: a small ring in three parts, top left */
+  #ring-view { position: relative; }
+  .season-pick { position: absolute; left: 30px; top: 26px; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .season-pick.right { left: auto; right: 30px; }
+  .season-pick[hidden] { display: none; }
+  .season-pick .seg text.tight { letter-spacing: 0.06em; font-size: 11px; }
+  .season-pick .pk-head { padding: 4px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.9); font: 700 16px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); }
+  .season-pick svg { display: block; overflow: visible; }
+  .season-pick .seg { cursor: pointer; outline: none; }
+  .season-pick .seg path.band { fill: var(--panel); stroke: var(--ink); stroke-width: 1.3; transition: fill 0.18s, stroke 0.18s; }
+  .season-pick .seg text { font: 700 12.5px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; letter-spacing: 0.2em; text-transform: uppercase; fill: var(--ink); pointer-events: none; transition: fill 0.18s; }
+  .season-pick .seg:hover path.band { fill: var(--paper-hi); stroke: var(--accent); }
+  .season-pick .seg:hover text { fill: var(--accent); }
+  .season-pick .seg[aria-checked="true"] path.band { fill: var(--accent); stroke: var(--accent); }
+  .season-pick .seg[aria-checked="true"] text { fill: var(--paper-hi); }
+  .season-pick .seg:focus-visible path.band { stroke: var(--ink); stroke-width: 2.5; }
+  .season-pick .hub { fill: var(--paper-hi); stroke: var(--line); stroke-width: 1; }
+  .season-pick .hub-n { font: 700 22px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+  .season-pick .hub-w { font: 600 8px/1 'Barlow', system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; fill: var(--muted); text-anchor: middle; dominant-baseline: central; }
+  @media (max-height: 760px), (max-width: 1100px) { .season-pick { top: 18px; } .season-pick svg { width: 150px; height: 150px; } }
+  @media (max-height: 600px) { .season-pick svg { width: 116px; height: 116px; } .season-pick .pk-head { font-size: 13px; } }
+  /* The seasons' colors: the page's tone follows the season picked (or violet for pro and high school maps) */
+  body { --tone: #7C3AED; --tone-glow: rgba(124, 58, 237, 0.2); }
+  body[data-tone="fall"] { --tone: #EA580C; --tone-glow: rgba(234, 88, 12, 0.22); }
+  body[data-tone="winter"] { --tone: #0284C7; --tone-glow: rgba(2, 132, 199, 0.22); }
+  body[data-tone="spring"] { --tone: #16A34A; --tone-glow: rgba(22, 163, 74, 0.22); }
+  #ring { --accent: var(--tone); --glow: var(--tone-glow); }
+  .scale .orbit { stroke: var(--tone); opacity: 0.6; transition: stroke 0.6s; }
+  #seasonPick .seg[data-v="fall"] { --c: #EA580C; --t: #FFEDD5; }
+  #seasonPick .seg[data-v="winter"] { --c: #0284C7; --t: #E0F2FE; }
+  #seasonPick .seg[data-v="spring"] { --c: #16A34A; --t: #DCFCE7; }
+  #seasonPick .seg path.band { fill: var(--t); stroke: var(--c); }
+  #seasonPick .seg text { fill: var(--c); }
+  #seasonPick .seg:hover path.band { fill: color-mix(in srgb, var(--c) 28%, white); stroke: var(--c); }
+  #seasonPick .seg:hover text { fill: var(--c); }
+  #seasonPick .seg[aria-checked="true"] path.band { fill: var(--g, var(--c)); stroke: var(--c); }
+  #seasonPick .seg[data-v="fall"] { --g: url(#seasonPick-paint-fall); }
+  #seasonPick .seg[data-v="winter"] { --g: url(#seasonPick-paint-winter); }
+  #seasonPick .seg[data-v="spring"] { --g: url(#seasonPick-paint-spring); }
+  /* the Maps ring takes three colors from the season showing (violets for pro and high school maps) */
+  body #levelPick .seg[data-v="hs"] { --c: #A78BFA; } body #levelPick .seg[data-v="college"] { --c: #7C3AED; } body #levelPick .seg[data-v="pro"] { --c: #5B21B6; }
+  body[data-tone="fall"] #levelPick .seg[data-v="hs"] { --c: #E08A00; } body[data-tone="fall"] #levelPick .seg[data-v="college"] { --c: #EA580C; } body[data-tone="fall"] #levelPick .seg[data-v="pro"] { --c: #B91C1C; }
+  body[data-tone="winter"] #levelPick .seg[data-v="hs"] { --c: #2FA4D9; } body[data-tone="winter"] #levelPick .seg[data-v="college"] { --c: #1D6FB0; } body[data-tone="winter"] #levelPick .seg[data-v="pro"] { --c: #173F78; }
+  body[data-tone="spring"] #levelPick .seg[data-v="hs"] { --c: #CA8A04; } body[data-tone="spring"] #levelPick .seg[data-v="college"] { --c: #16A34A; } body[data-tone="spring"] #levelPick .seg[data-v="pro"] { --c: #DB2777; }
+  #levelPick .seg path.band { fill: color-mix(in srgb, var(--c) 14%, white); stroke: var(--c); transition: fill 0.5s, stroke 0.5s; }
+  #levelPick .seg text { fill: var(--c); transition: fill 0.5s; }
+  #levelPick .seg:hover path.band { fill: color-mix(in srgb, var(--c) 30%, white); stroke: var(--c); }
+  #levelPick .seg:hover text { fill: var(--c); }
+  #levelPick .seg[aria-checked="true"] path.band { fill: var(--c); stroke: var(--c); }
+  #levelPick .seg[aria-checked="true"] text { fill: #FFFFFF; }
+  .season-pick .hub { stroke: var(--tone); stroke-width: 1.4; transition: stroke 0.5s; }
+  .season-pick .hub-n { fill: var(--tone); transition: fill 0.5s; }
+  #seasonPick .seg[aria-checked="true"] text { fill: #FFFFFF; }
+  .season-head.fall { color: #EA580C; } .season-head.winter { color: #0284C7; } .season-head.spring { color: #16A34A; }
+
+  /* The sky behind everything: oil-paint strokes in the season's shades, bursting out from the globe (pale near it so the
+     ring stays easy to read), and a faint latitude-longitude grid around the globe */
+  .sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .sky .tone { position: absolute; inset: 0; opacity: 0; transition: opacity 0.7s ease; }
+  .sky canvas.tone { width: 100%; height: 100%; }
+  /* words over the paint: a soft white halo, and solid cards on phones */
+  .label .n, .label .s { text-shadow: 0 0 3px #FFFFFF, 0 0 6px #FFFFFF, 0 0 10px rgba(255, 255, 255, 0.9); }
+  .row { background: rgba(255, 255, 255, 0.9) !important; }
+  .season-head { align-self: flex-start; padding: 3px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.92); }
+  .list-head { padding: 14px 10px 16px; border-radius: 18px; background: rgba(255, 255, 255, 0.82); }
+  /* a pale cloud behind the pickers and the legend, so they read clearly over the paint */
+  .season-pick { padding: 10px; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 255, 255, 0.92) 70%, rgba(255, 255, 255, 0)); }
+  #ring-view .legend { padding: 6px 18px; border-radius: 999px; background: rgba(255, 255, 255, 0.82); box-shadow: 0 0 18px 8px rgba(255, 255, 255, 0.6); }
+  footer { border-top-color: transparent; }
+  body[data-tone="fall"] .sky .tone.fall, body[data-tone="winter"] .sky .tone.winter, body[data-tone="spring"] .sky .tone.spring,
+  body[data-tone="pro"] .sky .tone.pro, body[data-tone="hs"] .sky .tone.pro { opacity: 1; }
+  .sky svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .sky .grid { fill: none; stroke: #FFFFFF; stroke-width: 1; opacity: 0.22; transition: stroke 0.7s; }
+  .sky .grid.major { stroke-width: 1.4; opacity: 0.32; }
+  .sky .edge { fill: none; stroke: #FFFFFF; stroke-width: 1.5; opacity: 0.3; transition: stroke 0.7s; }
+  .scale .season { font: 800 17px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; fill: var(--tone); text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--paper); stroke-width: 8px; }
 
   /* The globe */
   .center {
-    position: absolute; left: 430px; top: 350px; width: 320px; height: 320px; border-radius: 50%;
+    position: absolute; left: 370px; top: 310px; width: 440px; height: 440px; border-radius: 50%;
     background: radial-gradient(circle at 36% 30%, var(--sea-hi) 0%, var(--sea) 52%, var(--sea-lo) 100%);
-    box-shadow: 0 0 0 1.5px var(--ink), 0 0 0 6px var(--paper), 0 0 0 7px var(--line), 0 18px 50px -24px rgba(58, 46, 34, 0.55), 0 0 60px -10px var(--glow);
+    box-shadow: 0 0 0 1.5px var(--ink), 0 0 0 6px var(--paper), 0 0 0 7px var(--line), 0 18px 50px -24px rgba(17, 24, 39, 0.55), 0 0 60px -10px var(--glow);
     display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 22px; gap: 8px;
     overflow: hidden; transition: box-shadow 0.3s;
   }
-  .center > :not(.earth):not(.shade) { position: relative; }
+  .center > :not(.earth):not(.earth-cv):not(.shade) { position: relative; }
   /* The Earth: continents drawn on the sea, turning on a tilted axis */
-  .earth { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .earth .land { fill: var(--land); stroke: rgba(58, 46, 34, 0.55); stroke-width: 0.8; stroke-linejoin: round; opacity: 0.78; }
-  .earth .grat { fill: none; stroke: var(--ink); stroke-width: 0.7; opacity: 0.14; }
-  .earth .eq { fill: none; stroke: var(--ink); stroke-width: 1; opacity: 0.32; stroke-dasharray: 5 4; }
+  .earth.real { display: none; }   /* the photo has no grid lines */
+  .earth, .earth-cv { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .earth .land { fill: var(--land); stroke: #14532D; stroke-width: 0.6; stroke-linejoin: round; opacity: 0.92; }
+  .earth .grat { fill: none; stroke: #FFFFFF; stroke-width: 0.7; opacity: 0.18; }
+  .earth .eq { fill: none; stroke: #FFFFFF; stroke-width: 1; opacity: 0.4; stroke-dasharray: 5 4; }
   /* light from the upper left, a darker limb, and a soft pale wash behind the words so they stay readable */
   .shade { position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
     background:
-      radial-gradient(circle at 50% 54%, rgba(247, 240, 223, 0.62) 0%, rgba(247, 240, 223, 0.38) 34%, rgba(247, 240, 223, 0) 58%),
-      radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 42%),
-      radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0) 62%, rgba(40, 52, 46, 0.32) 100%); }
+      radial-gradient(circle at 50% 54%, rgba(15, 23, 42, 0.55) 0%, rgba(15, 23, 42, 0.35) 36%, rgba(15, 23, 42, 0) 60%),
+      radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 42%),
+      radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0) 62%, rgba(2, 6, 23, 0.45) 100%); }
   /* The spindle: the Earth's axis, sticking out past both poles */
   .scale .axis { stroke: var(--ink); stroke-width: 3.5; stroke-linecap: round; opacity: 0.8; }
   .scale .pin { fill: var(--paper-hi); stroke: var(--ink); stroke-width: 2; }
   .scale .pin-dot { fill: var(--ink); }
-  .scale .pole { font: 700 17px/1 'Cormorant Garamond', Georgia, serif; fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+  .scale .pole { font: 700 17px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
   .kicker { font-size: 15px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); }
-  .center .title { font-size: 58px; line-height: 0.95; margin: 0; letter-spacing: 0.08em; white-space: nowrap; align-self: stretch; }
-  .center .title span, .list-head .title span { color: var(--accent); font-style: italic; text-transform: none; letter-spacing: 0.02em; font-size: 1.12em; transition: color 0.2s; }
+  .center .kicker, .center .title, .center .hint, .gname { color: var(--on-globe); }
+  .center .title { font-size: 76px; line-height: 0.95; margin: 0; letter-spacing: 0.01em; white-space: nowrap; align-self: stretch; }
+  .center .title span, .list-head .title span { color: var(--accent); text-transform: none; letter-spacing: 0; font-size: 1em; transition: color 0.2s; }
+  .center .title span { color: #C4B5FD; }
   .hint { margin: 0 0 14px; font-size: 21px; line-height: 1.35; color: var(--dim); max-width: 320px; }
-  .center .kicker { font-size: 12px; }
-  .center .hint { color: var(--ink); font-weight: 500; font-size: 17px; line-height: 1.25; margin-bottom: 6px; max-width: 250px; min-height: 42px; }
-  .center .hint.stat { color: var(--accent); font-weight: 600; font-size: 15px; line-height: 1.25; }
+  .center .kicker { font-size: 15px; }
+  .center .hint { color: var(--on-globe); font-weight: 500; font-size: 20px; line-height: 1.25; margin-bottom: 8px; max-width: 330px; min-height: 50px; }
+  .center .hint.stat { color: #DDD6FE; font-weight: 600; font-size: 18px; line-height: 1.25; }
 
   /* Sport discs: dashed when the sport has nothing on this side yet */
-  .disc, .badge { border-radius: 50%; border: 1.5px dashed rgba(58, 46, 34, 0.42); background: var(--paper-hi); color: var(--muted); display: flex; align-items: center; justify-content: center; }
+  .disc, .badge { border-radius: 50%; border: 1.5px dashed rgba(17, 24, 39, 0.42); background: var(--paper-hi); color: var(--muted); display: flex; align-items: center; justify-content: center; }
   .disc.live, .live > .pick > .badge { border-style: solid; border-color: var(--ink); background: var(--panel); color: var(--ink); box-shadow: inset 0 0 0 4px var(--paper-hi), inset 0 0 0 5px var(--edge); }
   .disc { position: absolute; left: 0; top: 0; width: 64px; height: 64px; padding: 0; cursor: pointer; font: inherit; transition: transform 0.18s ease, opacity 0.18s, box-shadow 0.18s, border-color 0.18s, background 0.18s, color 0.18s; }
 
   /* Lighting: the lit sport glows, the rest fade */
   .disc.lit { transform: scale(1.14); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 6px var(--glow), 0 0 30px var(--glow); }
-  .disc.live.lit { background: var(--accent); color: var(--paper-hi); box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 5px rgba(247, 240, 223, 0.5), 0 0 0 6px var(--glow), 0 0 30px var(--glow); }
+  .disc.live.lit { background: var(--accent); color: var(--paper-hi); box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 5px rgba(255, 255, 255, 0.5), 0 0 0 6px var(--glow), 0 0 30px var(--glow); }
   /* The others fade, but only their icon and outline: a disc stays solid, so the rings pass behind it */
   #ring.has-lit .label:not(.lit), #ring.has-lit .disc:not(.lit) > svg { opacity: 0.4; }
-  #ring.has-lit .disc:not(.lit) { border-color: rgba(58, 46, 34, 0.22); box-shadow: none; }
+  #ring.has-lit .disc:not(.lit) { border-color: rgba(17, 24, 39, 0.22); box-shadow: none; }
   .disc > svg { transition: opacity 0.18s; }
 
 
@@ -115,7 +193,7 @@
   }
   .sat.lit { opacity: 1; visibility: visible; transform: none; transition: opacity 0.16s, transform 0.16s, visibility 0s; }
   a.sat.lit:hover { transform: scale(1.12); background: var(--accent); color: var(--paper-hi); }
-  .sat.off { border: 1.5px dashed rgba(58, 46, 34, 0.42); color: var(--muted); }
+  .sat.off { border: 1.5px dashed rgba(17, 24, 39, 0.42); color: var(--muted); }
   /* Each button's name, above or below it, so the names stay close to the disc and clear of the globe's title */
   .sat .tag { position: absolute; left: 50%; translate: -50% 0; padding: 2px 9px 3px; border-radius: 999px; background: var(--paper-hi); box-shadow: 0 0 0 1px var(--line);
     font-size: 15px; font-weight: 600; line-height: 1.2; white-space: nowrap; color: var(--accent); pointer-events: none; }
@@ -126,7 +204,7 @@
   .sat.side-b .tag { top: calc(100% + 11px); }
   /* A sport with both teams: two smaller circles a side, blue for men's and pink for women's, each with the
      man or woman figure on its edge */
-  :root { --men: #2F64A3; --women: #C2477F; }
+  :root { --men: #2563EB; --women: #DB2777; }
   .sat.small { width: 38px; height: 38px; }
   /* the small ring the lit sport's page buttons sit on */
   .mini { position: absolute; left: 0; top: 0; width: 168px; height: 168px; border-radius: 50%; border: 1.5px dashed var(--accent);
@@ -134,8 +212,8 @@
   .mini.lit { opacity: 0.55; transform: none; }
   .sum .tl { display: block; font-size: 16px; }
   .center .hint .tl { display: block; font-size: 14px; white-space: nowrap; }
-  .center .hint .tl.men { color: var(--men); }
-  .center .hint .tl.women { color: var(--women); }
+  .center .hint .tl.men { color: #93C5FD; }
+  .center .hint .tl.women { color: #F9A8D4; }
   .sum .tl.men { color: var(--men); }
   .sum .tl.women { color: var(--women); }
   .sat.men { border-color: var(--men); color: var(--men); }
@@ -161,12 +239,12 @@
 
   /* Each sport's name sits under its disc; a lit sport's drops below its small ring of buttons */
   .label { position: absolute; left: 0; top: 0; width: 170px; display: flex; flex-direction: column; align-items: center; text-align: center; pointer-events: none; gap: 1px; transition: opacity 0.18s; }
-  .label .n { font-size: 17px; line-height: 1.1; color: var(--dim); letter-spacing: 0.08em; white-space: nowrap; }
+  .label .n { font-size: 14px; line-height: 1.1; color: var(--dim); letter-spacing: 0.06em; white-space: nowrap; }
   .label.lit { z-index: 6; }
-  .label.lit .n { font-size: 22px; padding: 1px 10px 2px; border-radius: 999px; background: var(--paper); }
+  .label.lit .n { font-size: 18px; padding: 1px 10px 2px; border-radius: 999px; background: var(--paper); }
   .sat, .mini { z-index: 5; }
   .label.live .n, .label.lit .n { color: var(--ink); }
-  .label .s { font: italic 600 21px/1.2 'Cormorant Garamond', Georgia, serif; color: var(--muted); min-height: 24px; }
+  .label .s { font: 600 17px/1.2 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; color: var(--muted); min-height: 24px; }
   .label .s:empty { display: none; }   /* no Men's/Women's line (Football, Baseball, Softball): no blank gap */
 
   .legend { display: flex; gap: 28px; align-items: center; font-size: 14px; color: var(--muted); min-height: 20px; }
@@ -176,14 +254,14 @@
   .center.menu .kicker, .center.menu .title, .center.menu .hint, .center.menu .hsopen { display: none; }
   .gmaps { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
   .gmaps[hidden] { display: none; }
-  .gname { font-size: 25px; letter-spacing: 0.08em; line-height: 1; color: var(--ink); }
+  .gname { font-size: 27px; letter-spacing: 0.04em; line-height: 1; color: var(--on-globe); }
   .gcols { display: flex; gap: 8px; justify-content: center; }
-  .gcol { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 16px; }
+  .gcol { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 18px; }
   .gcols.one .gcol { display: grid; grid-template-columns: auto auto; gap: 3px 14px; justify-items: center; }
   .gcol b { font-size: 14px; font-weight: 700; color: inherit; }
-  .gcol.men { color: var(--men); }
-  .gcol.women { color: var(--women); }
-  .gcol a { font-weight: 600; color: var(--ink); text-decoration: none; white-space: nowrap; border-radius: 4px; padding: 0 5px; background: rgba(247, 240, 223, 0.72); }
+  .gcol.men { color: #93C5FD; }
+  .gcol.women { color: #F9A8D4; }
+  .gcol a { font-weight: 600; color: var(--ink); text-decoration: none; white-space: nowrap; border-radius: 4px; padding: 0 5px; background: rgba(255, 255, 255, 0.92); }
   .gcol a:hover { background: var(--accent); color: var(--paper-hi); }
   .gcol .soon { font-style: italic; color: var(--muted); }
 
@@ -191,14 +269,16 @@
      The globe scales with the window, so the button's words grow as it shrinks (--k, set in fit()). */
   .hsopen { min-height: 30px; padding: 3px 14px; border: 1px solid var(--ink); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; white-space: nowrap;
     font: 600 max(15px, calc(11.5px / var(--k, 1)))/1.2 'Barlow', system-ui, sans-serif; transition: background 0.2s, color 0.2s; }
+  .gbtns { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  a.hsopen { display: inline-flex; align-items: center; text-decoration: none; }
   .hsopen:hover { background: var(--accent); border-color: var(--accent); color: var(--paper-hi); }
   .hsopen:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
   .list-head .hsopen { min-height: 44px; margin-top: 10px; }
   .hs-short, #ring.tight .hs-long { display: none; }
   #ring.tight .hs-short { display: inline; }      /* a small globe's curve would cut off the long words */
-  dialog.hsq { width: min(620px, calc(100vw - 32px)); max-height: min(84dvh, 720px); margin: 6vh auto auto; padding: 18px 20px 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper-hi); color: var(--ink); box-shadow: 0 24px 60px -24px rgba(58, 46, 34, 0.6); }
+  dialog.hsq { width: min(620px, calc(100vw - 32px)); max-height: min(84dvh, 720px); margin: 6vh auto auto; padding: 18px 20px 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper-hi); color: var(--ink); box-shadow: 0 24px 60px -24px rgba(17, 24, 39, 0.6); }
   dialog.hsq[open] { display: flex; flex-direction: column; gap: 12px; }
-  dialog.hsq::backdrop { background: rgba(58, 46, 34, 0.32); }
+  dialog.hsq::backdrop { background: rgba(17, 24, 39, 0.32); }
   .hsq-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .hsq-head h2 { margin: 0; font-size: 20px; line-height: 1.1; }
   .hsq-x { flex: none; width: 44px; height: 44px; margin: -8px -10px -8px 0; border: 0; border-radius: 50%; background: none; color: var(--muted); font-size: 26px; line-height: 1; cursor: pointer; }
@@ -222,8 +302,8 @@
   .list-head .title { font-size: 42px; line-height: 1; margin: 0; }
   .list-head .hint { margin: 0 0 4px; max-width: 320px; color: var(--muted); font-size: 18px; }
   .rows { display: flex; flex-direction: column; gap: 8px; }
-  .season-head { margin: 10px 0 0; font: 700 15px/1.2 'Cormorant Garamond', Georgia, serif; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
-  .row { display: flex; flex-direction: column; border-radius: 12px; border: 1px solid var(--line); background: rgba(249, 243, 228, 0.6); transition: border-color 0.18s, box-shadow 0.18s, opacity 0.18s; }
+  .season-head { margin: 10px 0 0; font: 700 15px/1.2 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
+  .row { display: flex; flex-direction: column; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.6); transition: border-color 0.18s, box-shadow 0.18s, opacity 0.18s; }
   .rows.has-lit .row:not(.lit) { opacity: 0.55; }
   .row.lit { border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
   .pick { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 12px; background: none; border: 0; color: var(--ink); font: inherit; text-align: left; cursor: pointer; border-radius: 12px; }
@@ -240,7 +320,7 @@
   .actions { display: flex; flex-wrap: wrap; gap: 8px; }
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 22px; font-weight: 600; font-size: 15px; text-decoration: none; color: var(--paper-hi); background: var(--accent); border: 1.5px solid var(--accent); }
   .btn.ghost { background: none; color: var(--ink); border-color: var(--ink); }
-  .btn.off { background: none; color: var(--muted); border: 1.5px dashed rgba(58, 46, 34, 0.42); cursor: default; }
+  .btn.off { background: none; color: var(--muted); border: 1.5px dashed rgba(17, 24, 39, 0.42); cursor: default; }
   a.btn:hover { filter: brightness(1.08); }
 
   @media (max-width: 700px) {
@@ -255,10 +335,10 @@
     footer { padding: 10px 24px 22px; font-size: 15px; }
   }
 
-  footer { padding: 18px 24px 26px; border-top: 1px solid var(--edge); margin: 0 18px; font: italic 600 16px/1.5 'Cormorant Garamond', Georgia, serif; color: var(--muted); text-align: center; }
+  footer { padding: 18px 24px 26px; border-top: 1px solid var(--edge); margin: 0 18px; font: 500 15px/1.5 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; color: var(--muted); text-align: center; }
   footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 18px; }
   .src-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 18px; border-radius: 999px; border: 1.5px solid var(--ink); color: var(--ink); text-decoration: none; white-space: nowrap;
-    font: 700 14px/1 'Cormorant Garamond', Georgia, serif; text-transform: uppercase; letter-spacing: 0.14em; font-style: normal; background: var(--panel); transition: background 0.2s, color 0.2s, border-color 0.2s; }
+    font: 700 14px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.14em; font-style: normal; background: var(--panel); transition: background 0.2s, color 0.2s, border-color 0.2s; }
   @media (max-width: 420px) { .src-btn { font-size: 13px; letter-spacing: 0.1em; padding: 0 14px; } }
   .src-btn:hover { background: var(--accent); border-color: var(--accent); color: var(--paper-hi); }
   .src-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
@@ -268,25 +348,39 @@
 <body>
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-simplify@3.0.3/dist/topojson-simplify.min.js"></script>
 <script src="sports.js"></script>
 
+<div class="sky" aria-hidden="true">
+  <canvas class="tone fall"></canvas><canvas class="tone winter"></canvas><canvas class="tone spring"></canvas><canvas class="tone pro"></canvas>
+  <svg id="skyGrid"></svg>
+</div>
 <main id="ring-view">
+  <div class="season-pick" id="seasonPick">
+    <div class="pk-head" aria-hidden="true">Season</div>
+    <svg width="196" height="196" viewBox="-66 -66 132 132" role="radiogroup" aria-label="Season"></svg>
+  </div>
+  <div class="season-pick right" id="levelPick">
+    <div class="pk-head" aria-hidden="true">Maps</div>
+    <svg width="196" height="196" viewBox="-66 -66 132 132" role="radiogroup" aria-label="Maps"></svg>
+  </div>
   <div id="stage">
     <div id="ring">
-      <svg class="scale" width="1180" height="1020" aria-hidden="true">
+      <svg class="scale" width="1180" height="1060" aria-hidden="true">
         <g id="dial"></g>
         <g id="axis"></g>
         <g id="seasons"></g>
       </svg>
       <div class="center">
+        <canvas class="earth-cv" width="880" height="880" aria-hidden="true"></canvas>
         <svg class="earth" viewBox="0 0 400 400" aria-hidden="true">
-          <path class="grat"/><path class="land"/><path class="eq"/>
+          <path class="grat"/><path class="eq"/>
         </svg>
         <div class="shade" aria-hidden="true"></div>
-        <div class="kicker">College</div>
+        <div class="kicker" data-role="kicker">College</div>
         <h1 class="title cond" data-role="title"></h1>
         <p class="hint" data-role="hint"></p>
-        <button type="button" class="hsopen" data-hs-open aria-label="Search by high school" title="Search by high school"><span class="hs-long">Search by high school</span><span class="hs-short">High schools</span></button>
+        <div class="gbtns"><button type="button" class="hsopen" data-hs-open aria-label="Search by high school" title="Search by high school"><span class="hs-long">Search by high school</span><span class="hs-short">High schools</span></button><a class="hsopen" href="pro-pipeline.html" title="High school to college to the NFL, NBA, MLB and NHL"><span class="hs-long">Pro Pipeline</span><span class="hs-short">Pros</span></a></div>
         <div class="gmaps" id="globeMaps" hidden></div>
       </div>
     </div>
@@ -299,7 +393,7 @@
     <div class="kicker">College</div>
     <h1 class="title cond" data-role="title"></h1>
     <p class="hint" data-role="hint"></p>
-    <button type="button" class="hsopen" data-hs-open aria-label="Search by high school" title="Search by high school"><span class="hs-long">Search by high school</span><span class="hs-short">High schools</span></button>
+    <div class="gbtns"><button type="button" class="hsopen" data-hs-open aria-label="Search by high school" title="Search by high school"><span class="hs-long">Search by high school</span><span class="hs-short">High schools</span></button><a class="hsopen" href="pro-pipeline.html" title="High school to college to the NFL, NBA, MLB and NHL"><span class="hs-long">Pro Pipeline</span><span class="hs-short">Pros</span></a></div>
   </div>
   <div class="rows" id="rows"></div>
 </main>
@@ -419,13 +513,14 @@
     return s.teams.map((t) => `<div class="team ${SEX[t.sex].cls}"><span class="tlabel"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">${t.sex === 'm' ? MAN : WOMAN}</svg>${SEX[t.sex].word}</span><div class="actions">${row(t)}</div></div>`).join('');
   }
 
-  // ---- Build the rings once (positions in a 1180×1020 box, scaled to fit) ----
-  // Three rings around the globe, one per season, fall nearest. Neighbouring rings turn opposite ways.
-  const W = 1180, H = 1020, CX = W / 2, CY = H / 2, GLOBE = 200;
+  // ---- Build the ring once (positions in a 1180×1020 box, scaled to fit) ----
+  // One ring around the globe, holding one season's sports at a time; the picker at the top left changes it.
+  const W = 1180, H = 1060, CX = W / 2, CY = H / 2, GLOBE = 200;
   const DISC = 32;                 // a disc's radius
-  const SHOWN = 160;               // the globe's radius on the stage (GLOBE is its map's, inside the svg's 400×400)
-  const RINGS = [{ id: 'fall', R: 262, turn: 1, start: 30 }, { id: 'winter', R: 354, turn: -1, start: 45 }, { id: 'spring', R: 446, turn: 1, start: 26 }];
-  const OUTER = RINGS[RINGS.length - 1].R;
+  const SHOWN = 220;               // the globe's radius on the stage (GLOBE is its map's, inside the svg's 400×400)
+  const ORBIT = { R: 432, start: 30 };
+  const SEASONS = ['fall', 'winter', 'spring'].filter((id) => SPORTS.some((s) => s.ring === id));
+  const OUTER = ORBIT.R;
   const rad = (d) => d * Math.PI / 180;
   const at = (deg, dist) => ({ x: CX + dist * Math.sin(rad(deg)), y: CY - dist * Math.cos(rad(deg)) });
 
@@ -437,7 +532,6 @@
   const SAT_AT = { players: { '': 270, m: 315, w: 45 }, staff: { '': 90, m: 225, w: 135 } };
   const items = SPORTS.map((s) => {
     const sats = [];
-    const orbit = RINGS.find((r) => r.id === s.ring), mates = SPORTS.filter((x) => x.ring === s.ring);
     let html = `<button type="button" class="disc" data-id="${s.id}" aria-pressed="false">${sportSvg(s.icon, 44)}</button>`;
     ['players', 'staff'].forEach((kind) => s.teams.forEach((t) => {
       const off = SAT_AT[kind][t.sex || ''];
@@ -449,22 +543,68 @@
     ring.insertAdjacentHTML('beforeend', html);
     const q = (sel) => ring.querySelector(`${sel}[data-id="${s.id}"]`);
     sats.forEach((x) => { x.el = ring.querySelector(`.sat[data-id="${s.id}"][data-kind="${x.kind}"]${x.team ? `[data-team="${x.team}"]` : ''}`); });
-    return { id: s.id, pair: s.teams.length > 1, R: orbit.R, turn: orbit.turn, base: orbit.start + mates.indexOf(s) * 360 / mates.length, disc: q('.disc'), mini: q('.mini'), sats, label: q('.label') };
+    return { id: s.id, ring: s.ring, pair: s.teams.length > 1, base: 0, disc: q('.disc'), mini: q('.mini'), sats, label: q('.label') };
   });
+
+  // The pro leagues, for the Pro maps: each disc opens the Pro Pipeline on that league.
+  const LEAGUE_DISCS = [
+    { id: 'pro-nfl', lg: 'NFL', icon: 'football', sub: 'since 2017' }, { id: 'pro-nba', lg: 'NBA', icon: 'basketball', sub: 'this season' },
+    { id: 'pro-mlb', lg: 'MLB', icon: 'baseball', sub: 'this season' }, { id: 'pro-nhl', lg: 'NHL', icon: 'hockey', sub: 'this season' }];
+  LEAGUE_DISCS.forEach((L) => {
+    ring.insertAdjacentHTML('beforeend', `<a class="disc live" data-id="${L.id}" href="pro-pipeline.html#lg=${L.lg}" aria-label="${L.lg}: high school to college to the pros">${sportSvg(L.icon, 44)}</a>`
+      + `<div class="label live" data-id="${L.id}" aria-hidden="true"><span class="n cond">${L.lg}</span><span class="s">${L.sub}</span></div>`);
+    items.push({ id: L.id, ring: 'pro', pro: L, pair: false, base: 0, disc: ring.querySelector(`.disc[data-id="${L.id}"]`), mini: null, sats: [],
+      label: ring.querySelector(`.label[data-id="${L.id}"]`) });
+  });
+  const leagueOf = (id) => LEAGUE_DISCS.find((L) => L.id === id);
+
+  // ---- Which maps: high school, college or pro ----
+  // College maps show one season's sports (the season picker); pro maps the four leagues; high school maps are to come.
+  const LEVELS = ['hs', 'college', 'pro'];
+  const LEVEL_NAME = { hs: 'High school', college: 'College', pro: 'Pro' };
+  const LEVEL_HINT = { hs: 'High school maps are coming. For now, search any high school to see its players in every sport.',
+    college: 'Hover a sport, or click it for all its maps.', pro: 'Pick a league to follow its players from high school and college to the pros.' };
+  const hashLevel = () => { const m = /(?:^#|&)level=(\w+)/.exec(location.hash); return m && LEVELS.includes(m[1]) ? m[1] : null; };
+  let level = hashLevel() || 'college';
+  const onRing = (it) => level === 'college' ? it.ring === season : level === 'pro' ? it.ring === 'pro' : false;
+  function writeHash() {
+    const h = level === 'college' ? `season=${season}` : `level=${level}`;
+    try { history.replaceState(null, '', `#${h}`); } catch { /* a sandboxed preview */ }
+  }
+
+  // ---- The season on the ring ----
+  // It opens on the season being played now (fall Jul-Nov, winter Dec-Feb, spring Mar-Jun), or the one in the
+  // address (#season=winter), so a link keeps it.
+  const nowSeason = () => { const m = new Date().getMonth(); return m >= 6 && m <= 10 ? 'fall' : m === 11 || m <= 1 ? 'winter' : 'spring'; };
+  const hashSeason = () => { const m = /(?:^#|&)season=(\w+)/.exec(location.hash); return m && SEASONS.includes(m[1]) ? m[1] : null; };
+  let season = hashSeason() || (SEASONS.includes(nowSeason()) ? nowSeason() : SEASONS[0]);
+  const partsOf = (it) => [it.disc, it.mini, it.label, ...it.sats.map((x) => x.el)].filter(Boolean);
+  function arrange(animate) {
+    const mates = items.filter(onRing);
+    items.forEach((it) => {
+      const on = onRing(it);
+      it.base = on ? ORBIT.start + mates.indexOf(it) * 360 / mates.length : 0;
+      partsOf(it).forEach((el) => el.classList.toggle('away', !on));
+      [it.disc, it.label].forEach((el) => { el.classList.remove('enter'); if (on && animate) { void el.offsetWidth; el.classList.add('enter'); } });
+    });
+  }
+  arrange(false);
 
   // The dial between the globe and the ring: a dotted orbit plus a graduated scale, like a globe's meridian ring.
   (function buildDial() {
-    let svg = RINGS.map((r) => `<circle class="orbit" cx="${CX}" cy="${CY}" r="${r.R}"/>`).join('')
-      + `<circle class="rule" cx="${CX}" cy="${CY}" r="178"/><circle class="rule" cx="${CX}" cy="${CY}" r="190"/>`;
+    const R1 = SHOWN + 18, R2 = SHOWN + 30;          // the graduated scale, just outside the globe
+    let svg = `<circle class="orbit" cx="${CX}" cy="${CY}" r="${ORBIT.R}"/>`
+      + `<circle class="rule" cx="${CX}" cy="${CY}" r="${R1}"/><circle class="rule" cx="${CX}" cy="${CY}" r="${R2}"/>`;
     for (let d = 0; d < 360; d += 5) {
-      const major = d % 30 === 0, a = at(d, 178), b = at(d, major ? 190 : 184);
+      const major = d % 30 === 0, a = at(d, R1), b = at(d, major ? R2 : R1 + 6);
       svg += `<line class="tick${major ? ' major' : ''}" x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}"/>`;
     }
     document.getElementById('dial').innerHTML = svg;
-    // Each ring's name, on its orbit at the top; the discs pass over it
-    document.getElementById('seasons').innerHTML = RINGS.filter((r) => SPORTS.some((s) => s.ring === r.id))
-      .map((r) => `<text class="season" x="${CX}" y="${CY - r.R}">${r.id}</text>`).join('');
   })();
+  // The season's name, on the orbit at the top; the discs pass over it
+  const ringName = () => level === 'college' ? season : level === 'pro' ? 'pro leagues' : 'high school maps · coming soon';
+  const nameSeason = () => { document.getElementById('seasons').innerHTML = `<text class="season" x="${CX}" y="${CY - ORBIT.R}">${ringName()}</text>`; };
+  nameSeason();
   const dial = document.getElementById('dial');
 
   // ---- The Earth ----
@@ -473,13 +613,23 @@
   const TILT = 23.4;
   const EARTH_SPIN = 4;          // the Earth turns this many times faster than the ring of sports
   const earthSvg = document.querySelector('.earth');
-  const earthParts = { grat: earthSvg.querySelector('.grat'), land: earthSvg.querySelector('.land'), eq: earthSvg.querySelector('.eq') };
+  const earthParts = { grat: earthSvg.querySelector('.grat'), eq: earthSvg.querySelector('.eq') };
+  // The land is drawn on a canvas (the detailed 1:50m map is too many points to redraw as SVG while it turns),
+  // in three colors: green land, tan desert and dry steppe, white ice (Greenland, Antarctica).
+  const earthCv = document.querySelector('.earth-cv'), ectx = earthCv.getContext('2d');
+  const LAND_COLORS = { green: '#4E8B3A', dry: '#A7A35A', desert: '#D2B07A', ice: '#EEF2F4' };
+  const DESERT = new Set(['012', '434', '818', '729', '562', '466', '478', '148', '732', '682', '887', '512', '784', '634', '414',
+    '368', '400', '760', '364', '004', '586', '795', '860', '036', '516', '072', '706', '262', '232', '788', '504', '048']);
+  const DRY = new Set(['398', '496', '417', '762', '032', '152', '604', '710', '426', '894', '716', '231', '404', '686', '270',
+    '854', '624', '044', '484', '840x']);
+  const ICE = new Set(['304', '010', '260']);
   const hasD3 = typeof d3 !== 'undefined' && d3.geoOrthographic;
   const proj = hasD3 ? d3.geoOrthographic().scale(GLOBE).translate([GLOBE, GLOBE]).clipAngle(90).precision(0.5) : null;
   const geoPath = hasD3 ? d3.geoPath(proj) : null;
   const GRAT = hasD3 ? d3.geoGraticule().step([30, 30])() : null;
   const EQUATOR = { type: 'LineString', coordinates: [[-180, 0], [-90, 0], [0, 0], [90, 0], [180, 0]] };
-  let land = null, earthLon = -20;   // start with the Atlantic facing us
+  let lands = null, earthLon = -20, drawnLon = null;   // start with the Atlantic facing us
+  const cpath = hasD3 ? d3.geoPath(proj, ectx) : null;
 
   function drawEarth(lon) {
     if (!hasD3) return;
@@ -487,7 +637,14 @@
     proj.rotate([lon, 0, -TILT]);    // the axis lies flat in the page, leaning 23.4° from upright with the north pole to the right
     earthParts.grat.setAttribute('d', geoPath(GRAT) || '');
     earthParts.eq.setAttribute('d', geoPath(EQUATOR) || '');
-    earthParts.land.setAttribute('d', land ? geoPath(land) || '' : '');
+    if (drawnLon !== null && Math.abs(lon - drawnLon) < 0.2) return;   // about 30 redraws a second at most
+    if (tex) { drawnLon = lon; drawPhoto(lon); return; }
+    if (!lands) return;
+    drawnLon = lon;
+    ectx.setTransform(earthCv.width / 400, 0, 0, earthCv.height / 400, 0, 0);
+    ectx.clearRect(0, 0, 400, 400);
+    for (const [kind, shape] of lands) { ectx.beginPath(); cpath(shape); ectx.fillStyle = LAND_COLORS[kind]; ectx.fill(); }
+    ectx.beginPath(); cpath(lands.outline); ectx.lineWidth = 0.45; ectx.strokeStyle = 'rgba(10, 30, 20, 0.55)'; ectx.stroke();
   }
 
   // The axle the Earth turns on, like a desk globe's: a rod through both poles, pinned at the dial.
@@ -500,7 +657,7 @@
     const ang = (Math.atan2(uy, ux) * 180 / Math.PI + 90).toFixed(2);   // the rod's lean, for the labels
     let svg = '';
     for (const sgn of [1, -1]) {
-      const a = pt(sgn * (SHOWN - 2)), b = pt(sgn * 198), cap = pt(sgn * 202), lab = pt(sgn * 218);
+      const a = pt(sgn * (SHOWN - 2)), b = pt(sgn * (SHOWN + 38)), cap = pt(sgn * (SHOWN + 42)), lab = pt(sgn * (SHOWN + 58));
       svg += `<line class="axis" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>` +
              `<circle class="pin" cx="${cap[0]}" cy="${cap[1]}" r="6"/><circle class="pin-dot" cx="${cap[0]}" cy="${cap[1]}" r="2"/>` +
              `<text class="pole" x="${lab[0]}" y="${lab[1]}" transform="rotate(${ang} ${lab[0]} ${lab[1]})">${sgn > 0 ? 'N' : 'S'}</text>`;
@@ -508,24 +665,84 @@
     document.getElementById('axis').innerHTML = svg;
   }
 
-  if (hasD3 && typeof topojson !== 'undefined') {
-    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-110m.json')
+  // ---- The real Earth: NASA's Blue Marble (with a day's clouds) wrapped on the globe ----
+  // docs/img/earth.jpg is a 2048×1024 world picture (latitude and longitude in a grid). Each pixel of the globe's
+  // canvas knows once where on the picture it looks with the Earth unturned; turning the Earth only slides that
+  // sideways, so a redraw is one quick pass. If the picture can't be read (the page opened as a file, say), the
+  // drawn map below takes its place.
+  const PHOTO_SIZE = 600;          // the canvas's pixels across (shown at 440 px; sharp and still quick to redraw)
+  let tex = null;
+  function drawPhoto(lon) {
+    const { data, w, u0, row, px, out } = tex, shift = -lon / 360 * w;
+    for (let k = 0; k < px.length; k++) {
+      const a = u0[k];
+      if (a < 0) { px[k] = 0; continue; }
+      let u = (a + shift) % w;
+      if (u < 0) u += w;
+      px[k] = data[row[k] + (u | 0)];
+    }
+    ectx.setTransform(1, 0, 0, 1, 0, 0);
+    ectx.putImageData(out, 0, 0);
+  }
+  function loadPhoto() {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = img.width; c.height = img.height;
+        const g = c.getContext('2d');
+        g.drawImage(img, 0, 0);
+        const data = new Uint32Array(g.getImageData(0, 0, c.width, c.height).data.buffer);
+        const n = PHOTO_SIZE, R = n / 2, u0 = new Float32Array(n * n).fill(-1), row = new Int32Array(n * n);
+        const flat = d3.geoOrthographic().scale(R).translate([R, R]).clipAngle(90).rotate([0, 0, -TILT]);
+        for (let y = 0; y < n; y++) {
+          for (let x = 0; x < n; x++) {
+            if ((x + 0.5 - R) ** 2 + (y + 0.5 - R) ** 2 > R * R) continue;
+            const ll = flat.invert([x + 0.5, y + 0.5]);
+            if (!ll || Number.isNaN(ll[0])) continue;
+            const k = y * n + x;
+            u0[k] = (ll[0] + 180) / 360 * c.width;
+            row[k] = Math.min(c.height - 1, Math.max(0, Math.floor((90 - ll[1]) / 180 * c.height))) * c.width;
+          }
+        }
+        earthCv.width = earthCv.height = n;
+        const out = ectx.createImageData(n, n);
+        tex = { data, w: c.width, u0, row, out, px: new Uint32Array(out.data.buffer) };
+        earthSvg.classList.add('real');
+        drawnLon = null; drawEarth(earthLon);
+      } catch { tex = null; loadMap(); }
+    };
+    img.onerror = loadMap;
+    img.src = 'img/earth.jpg';
+  }
+  function loadMap() {
+    if (!hasD3 || typeof topojson === 'undefined') return;
+    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json')
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((world) => { land = topojson.feature(world, world.objects.land); drawEarth(earthLon); })
+      .then((full) => {
+        // the 1:50m map thinned of points too close to see on the globe (80,000 -> 17,000), so it turns smoothly
+        const world = topojson.presimplify ? topojson.simplify(topojson.presimplify(full), 0.03) : full;
+        const all = world.objects.countries.geometries, kind = (g) => ICE.has(g.id) ? 'ice' : DESERT.has(g.id) ? 'desert' : DRY.has(g.id) ? 'dry' : 'green';
+        const merged = (k) => topojson.merge(world, all.filter((g) => kind(g) === k));
+        lands = [['green', merged('green')], ['dry', merged('dry')], ['desert', merged('desert')], ['ice', merged('ice')]];
+        lands.outline = topojson.mesh(world, world.objects.countries, (a, b) => a === b);   // the coastlines only
+        drawnLon = null; drawEarth(earthLon);
+      })
       .catch(() => {});
   }
+  if (hasD3) loadPhoto();
 
   // Put every sport where it belongs for this much rotation (degrees).
   const put = (el, p, half) => { el.style.translate = `${(p.x - half).toFixed(2)}px ${(p.y - half).toFixed(2)}px`; };
   function place(rot) {
     items.forEach((it) => {
-      const deg = it.base + it.turn * rot;
-      const c = at(deg, it.R);
+      if (!onRing(it)) return;
+      const c = at(it.base + rot, ORBIT.R);
       put(it.disc, c, DISC);
-      put(it.mini, c, MINI_R);
+      if (it.mini) put(it.mini, c, MINI_R);
       it.sats.forEach((x) => put(x.el, { x: c.x + MINI_R * Math.sin(rad(x.off)), y: c.y - MINI_R * Math.cos(rad(x.off)) }, x.half));
       // the name sits under the disc, or under its small ring of buttons when it's lit
-      const below = it.id !== lit ? DISC + 2 : it.pair ? MINI_R + 56 : MINI_R + 24;
+      const below = it.id !== lit || it.pro ? DISC + 2 : it.pair ? MINI_R + 56 : MINI_R + 24;
       it.label.style.translate = `calc(${c.x.toFixed(2)}px - 50%) ${(c.y + below).toFixed(2)}px`;
     });
     dial.setAttribute('transform', `rotate(${rot.toFixed(3)} ${CX} ${CY})`);
@@ -548,7 +765,7 @@
       ring.querySelector(`.disc[data-id="${s.id}"]`).setAttribute('aria-label', `${fullName(s)}: ${summary(s)}`);
     });
 
-    rowsEl.innerHTML = SPORTS.map((s, i) => `${!i || SPORTS[i - 1].ring !== s.ring ? `<h2 class="season-head">${s.ring}</h2>` : ''}
+    rowsEl.innerHTML = SPORTS.map((s, i) => `${!i || SPORTS[i - 1].ring !== s.ring ? `<h2 class="season-head ${s.ring}">${s.ring}</h2>` : ''}
       <div class="row${isLive(s) ? ' live' : ''}" data-id="${s.id}">
         <button type="button" class="pick" data-id="${s.id}" aria-expanded="false">
           <span class="badge">${sportSvg(s.icon, 32)}</span>
@@ -563,22 +780,24 @@
     light(lit, true);
   }
 
-  // The globe's title: as big as fits across the globe (58px at most), whichever font has loaded.
+  // The globe's title: as big as fits across the globe (76px at most), whichever font has loaded.
   function fitTitle() {
     const el = document.querySelector('.center .title');
     if (!el) return;
-    let size = 58;
+    let size = 76;
     el.style.fontSize = size + 'px';
-    while (el.scrollWidth > el.clientWidth && size > 36) el.style.fontSize = (size -= 2) + 'px';
+    while (el.scrollWidth > el.clientWidth && size > 40) el.style.fontSize = (size -= 2) + 'px';
   }
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitle);
 
   // ---- Lighting ----
   // The globe's line: the lit sport's numbers, or the hint when none is lit.
   function showHint() {
-    const el = document.querySelector('.center [data-role="hint"]'), s = lit ? byId(lit) : null;
-    el.classList.toggle('stat', !!s);
-    if (s) el.innerHTML = summaryHTML(s); else el.textContent = PAGE.hint;
+    const el = document.querySelector('.center [data-role="hint"]'), s = lit ? byId(lit) : null, L = lit ? leagueOf(lit) : null;
+    el.classList.toggle('stat', !!(s || L));
+    if (s) el.innerHTML = summaryHTML(s);
+    else if (L) el.textContent = `${L.lg} players ${L.sub}: where they went to high school and college. Click to open.`;
+    else el.textContent = LEVEL_HINT[level];
   }
   function light(id, quiet) {
     const changed = id !== lit;
@@ -593,7 +812,8 @@
     rowsEl.classList.toggle('has-lit', !!id);
     ring.querySelectorAll('.disc').forEach((d) => d.setAttribute('aria-pressed', d.dataset.id === pinned ? 'true' : 'false'));
     rowsEl.querySelectorAll('.pick').forEach((p) => p.setAttribute('aria-expanded', p.dataset.id === id ? 'true' : 'false'));
-    if (id && changed && !quiet) { const s = byId(id); document.getElementById('say').textContent = `${fullName(s)}: ${summary(s).replace(/\n/g, '; ')}`; }
+    const s = id ? byId(id) : null;
+    if (s && changed && !quiet) document.getElementById('say').textContent = `${fullName(s)}: ${summary(s).replace(/\n/g, '; ')}`;
   }
   // A clicked sport's maps, all of them, in the globe: one column per team for a sport with both.
   function globeMaps() {
@@ -638,7 +858,7 @@
   // First click or tap pins a sport lit; a second one opens its page.
   ring.addEventListener('click', (e) => {
     const disc = e.target.closest('.disc');
-    if (!disc) return;
+    if (!disc || disc.tagName === 'A') return;      // a league's disc is a link to the Pro Pipeline
     const id = disc.dataset.id;
     if (pinned === id && lit === id) {            // a second click opens the page, when there is just one team
       const s = byId(id), page = !paired(s) && s.teams[0].players;
@@ -662,6 +882,93 @@
     if (!e.target.closest('.disc, .sat, .center')) { pinned = null; light(null); }
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { pinned = null; light(null); } });
+
+  // ---- The pickers: a ring cut in three, one part per choice, clockwise from the top ----
+  // opts: el (the picker's box), ids, label(id), hub(id) -> [number or '', word], aria(id), tight (smaller letters),
+  // current() and choose(id). Returns show(), to redraw it after a change.
+  function ringPicker(opts) {
+    const svg = opts.el.querySelector('svg');
+    const RO = 62, RI = 30, GAP = 3, RT = (RO + RI) / 2;
+    const pt = (deg, r) => `${(r * Math.sin(rad(deg))).toFixed(2)} ${(-r * Math.cos(rad(deg))).toFixed(2)}`;
+    const n = opts.ids.length, span = 360 / n, key = opts.el.id;
+    let html = '';
+    opts.ids.forEach((id, i) => {
+      const a = i * span + GAP / 2, b = (i + 1) * span - GAP / 2, mid = (a + b) / 2, big = b - a > 180 ? 1 : 0;
+      const band = `M${pt(a, RO)} A${RO} ${RO} 0 ${big} 1 ${pt(b, RO)} L${pt(b, RI)} A${RI} ${RI} 0 ${big} 0 ${pt(a, RI)}Z`;
+      // the name follows the arc, turned so it never reads upside down
+      const low = mid > 90 && mid < 270;
+      const arc = low ? `M${pt(b, RT)} A${RT} ${RT} 0 ${big} 0 ${pt(a, RT)}` : `M${pt(a, RT)} A${RT} ${RT} 0 ${big} 1 ${pt(b, RT)}`;
+      html += `<g class="seg" role="radio" data-v="${id}" aria-label="${esc(opts.aria(id))}">`
+        + `<path class="band" d="${band}"/><path id="${key}-arc-${id}" d="${arc}" fill="none"/>`
+        + `<text${opts.tight ? ' class="tight"' : ''} dy="${low ? '0.75em' : '0.3em'}" dominant-baseline="middle"><textPath href="#${key}-arc-${id}" startOffset="50%" text-anchor="middle">${opts.label(id)}</textPath></text></g>`;
+    });
+    html += `<circle class="hub" r="${RI - 5}"/><text class="hub-n" y="-5"></text><text class="hub-w" y="12"></text>`;
+    if (opts.paints) {          // a gradient per choice, for the picked part
+      html = '<defs>' + Object.entries(opts.paints).map(([id, cs]) => `<linearGradient id="${key}-paint-${id}" x1="0" y1="0" x2="1" y2="1">`
+        + cs.map((c, i) => `<stop offset="${(i / (cs.length - 1)).toFixed(2)}" stop-color="${c}"/>`).join('') + '</linearGradient>').join('') + '</defs>' + html;
+    }
+    svg.innerHTML = html;
+    const segs = [...svg.querySelectorAll('.seg')];
+    function show() {
+      const cur = opts.current();
+      segs.forEach((g) => { const on = g.dataset.v === cur; g.setAttribute('aria-checked', on); g.setAttribute('tabindex', on ? '0' : '-1'); });
+      const [num, word] = opts.hub(cur);
+      svg.querySelector('.hub-n').textContent = num;
+      svg.querySelector('.hub-w').textContent = word;
+      svg.querySelector('.hub-w').setAttribute('y', num === '' ? 0 : 12);
+    }
+    const pick = (id, focus) => { if (id !== opts.current()) opts.choose(id); show(); if (focus) svg.querySelector(`.seg[data-v="${id}"]`).focus(); };
+    svg.addEventListener('click', (e) => { const g = e.target.closest('.seg'); if (g) pick(g.dataset.v); });
+    svg.addEventListener('keydown', (e) => {
+      const i = opts.ids.indexOf(opts.current());
+      if (['ArrowRight', 'ArrowDown'].includes(e.key)) { e.preventDefault(); pick(opts.ids[(i + 1) % n], true); }
+      else if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { e.preventDefault(); pick(opts.ids[(i + n - 1) % n], true); }
+      else if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.seg')) { e.preventDefault(); pick(e.target.closest('.seg').dataset.v, true); }
+    });
+    show();
+    return show;
+  }
+  const sportsIn = (id) => SPORTS.filter((s) => s.ring === id).length;
+  // after a change of season or level: the lit sport goes if it left the ring, the discs move in, the words follow
+  function newRing() {
+    const gone = (id) => id && !items.some((it) => it.id === id && onRing(it));
+    if (gone(pinned) || gone(lit)) { pinned = null; light(null, true); }
+    arrange(true);
+    place(rot);
+    nameSeason();
+    showHint();
+    document.querySelectorAll('[data-role="kicker"]').forEach((el) => { el.textContent = LEVEL_NAME[level]; });
+    document.getElementById('seasonPick').hidden = level !== 'college';
+    setTone();
+    writeHash();
+  }
+  const showSeason = ringPicker({
+    el: document.getElementById('seasonPick'), ids: SEASONS, label: (id) => id,
+    paints: { fall: ['#FBBF24', '#F97316', '#DC2626', '#991B1B'], winter: ['#7FD0EE', '#2FA4D9', '#1D6FB0', '#173F78'], spring: ['#F9A8D4', '#F472B6', '#EC4899', '#BE185D'] },
+    aria: (id) => `${id[0].toUpperCase() + id.slice(1)}: ${sportsIn(id)} sports`,
+    hub: (id) => [sportsIn(id), 'sports'], current: () => season,
+    choose: (id) => {
+      season = id;
+      newRing();
+      document.getElementById('say').textContent = `${id}: ${SPORTS.filter((s) => s.ring === id).map((s) => s.name.toLowerCase()).join(', ')}`;
+    },
+  });
+  const showLevel = ringPicker({
+    el: document.getElementById('levelPick'), ids: LEVELS, tight: true, label: (id) => LEVEL_NAME[id],
+    aria: (id) => `${LEVEL_NAME[id]} maps${id === 'hs' ? ' (coming soon)' : ''}`,
+    hub: (id) => id === 'college' ? [SPORTS.length, 'sports'] : id === 'pro' ? [LEAGUE_DISCS.length, 'leagues'] : ['', 'soon'],
+    current: () => level,
+    choose: (id) => { level = id; newRing(); document.getElementById('say').textContent = `${LEVEL_NAME[id]} maps`; },
+  });
+  window.addEventListener('hashchange', () => {
+    const lv = hashLevel() || 'college', se = hashSeason() || season;
+    if (lv !== level || se !== season) { level = lv; season = se; newRing(); showSeason(); showLevel(); }
+  });
+  if (level !== 'college') { arrange(false); place(0); nameSeason(); document.getElementById('seasonPick').hidden = true; }
+  // the page's tone: the season's color for college maps, violet for the others (CSS reads body[data-tone])
+  function setTone() { document.body.dataset.tone = level === 'college' ? season : level; }
+  setTone();
+  document.querySelectorAll('[data-role="kicker"]').forEach((el) => { el.textContent = LEVEL_NAME[level]; });
 
   render();
 
@@ -725,8 +1032,88 @@
   window.addEventListener('resize', fit);
   fit();
 
+  // ---- The sky's grid: a huge faint globe's latitude and longitude lines, centred on the real globe ----
+  function drawSky() {
+    const svg = document.getElementById('skyGrid');
+    if (!hasD3 || !svg) return;
+    const w = innerWidth, h = innerHeight, r = stage.getBoundingClientRect();
+    const onRingView = ringViewEl.offsetParent !== null && r.width > 0;
+    const cx = onRingView ? r.left + CX * scaleK : w / 2, cy = onRingView ? r.top + CY * scaleK : h * 0.32;
+    const big = d3.geoOrthographic().scale(Math.max(w, h) * 0.72).translate([cx, cy]).rotate([-20, -16, -TILT]).clipAngle(90);
+    const path = d3.geoPath(big);
+    const minor = d3.geoGraticule().step([10, 10])(), major = d3.geoGraticule().step([30, 30])();
+    paintSky(w, h, cx, cy);
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    svg.innerHTML = `<path class="grid" d="${path(minor) || ''}"/><path class="grid major" d="${path(major) || ''}"/>`
+      + `<circle class="edge" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${big.scale().toFixed(1)}"/>`;
+  }
+  // The paint: thick oil-paint strokes bursting out from the globe, in the season's colors, light in the middle and
+  // deeper toward the edges (fall: golds to oranges to deep reds; winter: white to ice blue to navy; spring: pale
+  // yellow through pinks and greens to magenta and leaf green; pro and high school maps: violets). Each band lists the
+  // colors one stroke may take at that distance. The same every visit (a fixed seed).
+  const PAINT = {
+    fall: { seed: 11, bands: [['#FFF6DA', '#FFEFC2', '#FFF9E8'], ['#FFE08A', '#FFD166', '#FFE6A3'], ['#FFC23D', '#FFB703', '#FDBA74', '#FFCF5C'],
+      ['#FB8500', '#F97316', '#FFA41B', '#F59E0B'], ['#EA580C', '#E04E10', '#F06A0F', '#D9480F'], ['#DC2626', '#C2361A', '#B91C1C', '#E0531F'],
+      ['#9E2A1C', '#991B1B', '#7F1D1D', '#B4321A']] },
+    winter: { seed: 23, bands: [['#FFFFFF', '#F8FCFF', '#F2FAFF'], ['#E6F6FF', '#DDF3FB', '#EEF8FF'], ['#BDE8F7', '#A5DDF2', '#C9EDF9'],
+      ['#7FD0EE', '#5FC3EA', '#67C6E3', '#8ED7F0'], ['#2FA4D9', '#3B9DD6', '#1E90C8', '#45B0E0'], ['#1C7FC0', '#1D6FB0', '#1A5E9E', '#2387C8'],
+      ['#173F78', '#14366A', '#102A55', '#1C4B8A']] },
+    spring: { seed: 37, bands: [['#FFFEF5', '#FFFBEA', '#FFF8FB'], ['#FFF6B8', '#FEF3C7', '#FDF2F8', '#F0FDF4'], ['#FDE68A', '#FBCFE8', '#D9F99D', '#FDE047'],
+      ['#F9A8D4', '#BEF264', '#FDE047', '#86EFAC'], ['#F472B6', '#86EFAC', '#A3E635', '#FB7185'], ['#EC4899', '#4ADE80', '#DB2777', '#22C55E'],
+      ['#BE185D', '#16A34A', '#9D174D', '#15803D']] },
+    pro: { seed: 51, bands: [['#FFFFFF', '#FAF7FF', '#FDFBFF'], ['#EDE9FE', '#F3E8FF', '#F5F3FF'], ['#DDD6FE', '#E9D5FF', '#E0E7FF'],
+      ['#C4B5FD', '#D8B4FE', '#C7D2FE'], ['#A78BFA', '#C084FC', '#A5B4FC'], ['#8B5CF6', '#7C3AED', '#9333EA'], ['#6D28D9', '#5B21B6', '#4C1D95', '#581C87']] },
+  };
+  function seeded(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  const shade = (hex, k) => {                    // k > 0 lighter (toward white), k < 0 darker
+    const n = parseInt(hex.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(k > 0 ? v + (255 - v) * k : v * (1 + k)));
+    return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+  };
+  function paintCanvas(cv, kind, w, h, cx, cy) {
+    const P = PAINT[kind], rnd = seeded(P.seed), nb = P.bands.length;
+    cv.width = w; cv.height = h;
+    const g = cv.getContext('2d');
+    const far = Math.max(Math.hypot(cx, cy), Math.hypot(w - cx, cy), Math.hypot(cx, h - cy), Math.hypot(w - cx, h - cy));
+    const under = g.createRadialGradient(cx, cy, 0, cx, cy, far);      // the wash under the strokes
+    P.bands.forEach((band, i) => under.addColorStop(i / (nb - 1), band[0]));
+    g.fillStyle = under; g.fillRect(0, 0, w, h);
+    g.lineCap = 'round';
+    const n = Math.round(w * h / 120);
+    for (let i = 0; i < n; i++) {
+      const x = rnd() * w, y = rnd() * h, dx = x - cx, dy = y - cy, dist = Math.hypot(dx, dy);
+      const t = Math.min(0.999, Math.max(0, (dist / far) ** 0.8 + (rnd() - 0.5) * 0.16));
+      const band = P.bands[Math.floor(t * nb)], color = band[Math.floor(rnd() * band.length)];
+      const ang = Math.atan2(dy, dx) + 0.45 * Math.sin(dist / 85 + Math.atan2(dy, dx) * 3) + (rnd() - 0.5) * 0.7;
+      const len = 16 + rnd() * 36 * (0.55 + t), wid = 5 + rnd() * 11 * (0.55 + t), bend = (rnd() - 0.5) * len * 0.7;
+      const ux = Math.cos(ang), uy = Math.sin(ang), px = -uy, py = ux;
+      const ax = x - ux * len / 2, ay = y - uy * len / 2, bx = x + ux * len / 2, by = y + uy * len / 2, qx = x + px * bend, qy = y + py * bend;
+      const line = (off, width, style, alpha) => {
+        g.globalAlpha = alpha; g.strokeStyle = style; g.lineWidth = width;
+        g.beginPath(); g.moveTo(ax + px * off, ay + py * off); g.quadraticCurveTo(qx + px * off, qy + py * off, bx + px * off, by + py * off); g.stroke();
+      };
+      line(wid * 0.3, wid * 0.9, shade(color, -0.22), 0.35);      // the stroke's shadow side
+      line(0, wid, color, 0.95);                                  // the paint
+      line(-wid * 0.28, wid * 0.28, shade(color, 0.45), 0.55);   // the light catching its ridge
+    }
+    g.globalAlpha = 1;
+  }
+  // The season showing is painted first; the others follow a moment later, one at a time, so the page opens quickly.
+  function paintSky(w, h, cx, cy) {
+    const kinds = ['fall', 'winter', 'spring', 'pro'], now = document.body.dataset.tone === 'hs' ? 'pro' : document.body.dataset.tone;
+    const order = [now, ...kinds.filter((k) => k !== now)].filter((k) => kinds.includes(k));
+    const run = (i) => {
+      if (i >= order.length) return;
+      paintCanvas(document.querySelector(`.sky canvas.tone.${order[i]}`), order[i], w, h, cx, cy);
+      setTimeout(() => run(i + 1), 60);
+    };
+    run(0);
+  }
+  let skyTimer = null;
+  window.addEventListener('resize', () => { clearTimeout(skyTimer); skyTimer = setTimeout(drawSky, 120); });
+  drawSky();
+
   // ---- The slow turn ----
-  // One full turn every 200 seconds, each ring the other way from its neighbours. It eases to a stop while the mouse is over the globe and its ring,
+  // One full turn every 200 seconds. It eases to a stop while the mouse is over the globe and its ring,
   // or while a sport is lit, and picks up again when you move away. Reduced motion: it stays still.
   const TURN = 360 / 200;   // degrees per second
   const still = matchMedia('(prefers-reduced-motion: reduce)');

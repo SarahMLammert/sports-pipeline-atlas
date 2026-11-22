@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="description" content="Where every college football player since 2016 comes from, mapped: FBS, FCS, Division II, Division III, NAIA and junior college.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="common.css">
 <style>
 /* Layout: the map is the page. Title, search and buttons float over it; filters drop down from their button,
@@ -406,7 +406,7 @@ body { background: var(--sea); }
       const x = l.x * k + ox, y = l.y * k + oy;
       if (x < -100 || y < -30 || x > w + 100 || y > h + 30) continue;
       const fs = px > 60000 ? 14 : px > 12000 ? 12.5 : 11;
-      ctx.font = `italic 600 ${fs + 2}px ${css("--display")}`;   // country names in an atlas serif
+      ctx.font = `600 ${fs + 1}px ${css("--display")}`;   // country names
       try { ctx.letterSpacing = ".14em"; } catch { /* a browser without it draws the letters closer */ }
       const text = l.name.toUpperCase(), tw = ctx.measureText(text).width;
       if (tw > Math.sqrt(px) * 2.2) continue;           // the name would spill far past the country

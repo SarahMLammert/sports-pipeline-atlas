@@ -46,8 +46,17 @@ season) with the same few functions in `scripts/core.py` (`season_span`, `season
 
 ## The site
 
-`docs/index.html` is the sport picker: three rings around the globe, fall nearest, then winter and spring, each sport
-on the ring set by `ring` in its settings. Its list of sports comes from `docs/sports.js`, its numbers from each sport's
+`docs/index.html` is the sport picker: one ring around the globe. Two three-part ring pickers choose what is on it:
+**Maps** at the top right (high school, college, pro) and, for college maps, **Season** at the top left (fall,
+winter, spring; it opens on the season being played). College maps put that season's sports on the ring (each sport's
+season is `ring` in its settings); pro maps put the NFL, NBA, MLB and NHL there, each opening the Pro Pipeline;
+high school maps are still to come. The address keeps the choice (`#season=winter`, `#level=pro`). The globe is NASA's Blue
+Marble picture (`docs/img/earth.jpg`, 2048×1024, clouds included, from the three-globe package's example images)
+wrapped onto a canvas; if it can't be read, world-atlas's 1:50m map is drawn instead. Behind it, the page is painted in thick oil-paint strokes that burst out from the
+globe in the picked season's colors (fall golds, oranges and reds; winter white, ice blue and navy; spring yellows, pinks
+and greens; violets for pro and high school maps; `PAINT` in index.html, the same every visit), light near the globe and
+deeper at the edges, with a faint
+latitude-longitude grid of a much bigger globe centred on the real one (`body[data-tone]`, `.sky`). Its list of sports comes from `docs/sports.js`, its numbers from each sport's
 `summary.json`. There is one set of six
 pages for every sport, opened with the sport in the address (`players-dotmap.html?sport=softball`):
 
@@ -61,6 +70,13 @@ pages for every sport, opened with the sport in the address (`players-dotmap.htm
 - **School Influence Map** (`school-influence.html`): pick a school and a season to see where everyone who had been
   there was that season, each person's career, and how the school ranks. Built in the browser from the player and
   staff data, so it needs no build step of its own.
+
+One page covers every league: **Pro Pipeline** (`pro-pipeline.html`, linked from the globe): NFL, NBA, MLB and NHL
+players traced back to their college and high school, with a league picker, a team picker, NFL seasons, and one
+player's path (hometown → college → teams). Its data is `docs/pro/pipeline.json` (`pro_rosters.py --build`).
+
+The look: a modern, bright atlas. Colors are CSS variables at the top of `docs/common.css` (the map pages, with a
+dark mode) and of `docs/index.html` (the deep-blue globe); headings use Plus Jakarta Sans, text Barlow.
 
 Every page shares one strip of maps in its title bar (`MAPS` in `docs/common.js`, grouped into Players, Coaches and
 Schools), and a map opens on the school the page is showing. A sport dropdown beside it keeps the same map and school.
@@ -211,7 +227,9 @@ tests/                 test_atlas.py: the code (also checked with the linter, ru
   (cached like the college pages; `--refresh` downloads again, `--match-only` redoes the matching) and writes
   `rosters/pro/nfl_<season>.csv` and `nfl_<season>_matched.csv`: each player with his college matched to that school's
   football roster, so hometown and high school come from the college data (about 93% matched). A roster page lists
-  current players only, so each run is a snapshot of one season. No page shows it yet.
+  current players only, so each run is a snapshot of one season; past NFL seasons come from nflverse's roster files
+  (`python3 scripts/pro_rosters.py nfl --season 2017-2026`). `python3 scripts/pro_rosters.py --build` then writes the
+  Pro Pipeline page's data from every `*_matched.csv`. Pro teams' places are in `config/shared/pro_teams.csv`.
 
 ## Adding a sport
 

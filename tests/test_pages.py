@@ -86,15 +86,22 @@ def run_checks(sports: list[str], docs: Path = DOCS, route=None) -> list[str]:
         with sync_playwright() as p:
             browser = p.chromium.launch()
             problems, page = check_page(browser, base + "index.html", route)
-            n = page.locator(".disc").count()
+            n = page.locator('.disc:not([data-id^="pro-"])').count()      # the pro leagues' discs are extra
             if n != len(discs):
                 problems.append(f"{n} discs on the page, {len(discs)} in sports.js")
-            text = page.inner_text("body").lower()       # the names are in capitals on the page
+            # the names are in capitals on the page; the other seasons' discs are hidden until picked, so not inner_text
+            text = (page.text_content("body") or "").lower()
             for d in discs:
                 if d["name"].lower() not in text:
                     problems.append(f"{d['name']} isn't on the page")
             page.close()
             out += [f"index.html: {x}" for x in problems]
+            if (docs / "pro" / "pipeline.json").exists():     # the Pro Pipeline (scripts/pro_rosters.py --build)
+                problems, page = check_page(browser, base + "pro-pipeline.html", route)
+                if not page.locator("#side .big").count():
+                    problems.append("no numbers in the side panel")
+                page.close()
+                out += [f"pro-pipeline.html: {x}" for x in problems]
             for sport in sports:
                 pages = PLAYER_PAGES + [s for s in STAFF_PAGES if (docs / sport / "staff_data.json").exists()] + ["school-influence"]
                 for name in pages:

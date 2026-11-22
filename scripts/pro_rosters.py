@@ -24,23 +24,55 @@ Writes, in rosters/pro/:
                                  roster), "likely" (last name and first names that fit), "hometown" (same name
                                  at another school, born in the town that roster gives as his hometown).
 
-A roster lists the current players only, so each run is a snapshot of one season. A site that refuses
-automated visitors is left out, not worked around (wnba.com did on Nov 9).
+A league's site lists the current players only, so each run there is a snapshot of one season. Past NFL
+seasons come from nflverse's roster files instead (one file a season, everyone on a roster at the season's end):
+
+    python3 scripts/pro_rosters.py nfl --season 2017-2026   # 2017-2025 from nflverse, 2026 from nfl.com
+
+Then the Pro Pipeline page's data, from every <league>_<season>_matched.csv:
+
+    python3 scripts/pro_rosters.py --build                  # -> docs/pro/pipeline.json
+
+A site that refuses automated visitors is left out, not worked around (wnba.com did on Nov 9).
 """
 from __future__ import annotations
 
 import argparse
+import csv
 import datetime as dt
+import html
+import io
 import json
 import re
+import string
 import sys
 from collections import Counter, defaultdict
 
 from bs4 import BeautifulSoup
 
-from core import CACHE, ROSTERS, Fetcher, Levels, clean, load_sport, name_key, read_csv, season_files, write_csv
+from core import (CACHE, CONFIG, ROOT, ROSTERS, Fetcher, Levels, clean, load_sport, name_key, read_csv, season_files,
+                  write_csv)
 
 PRO_DIR = ROSTERS / "pro"
+PAGE_DATA = ROOT / "docs" / "pro" / "pipeline.json"
+PRO_TEAMS = CONFIG / "shared" / "pro_teams.csv"     # each pro team's city and where it plays, for the map
+
+# Past NFL seasons: nflverse's roster file for a season (on GitHub), and its team codes
+NFLVERSE_URL = "https://github.com/nflverse/nflverse-data/releases/download/rosters/roster_{season}.csv"
+NFL_FIRST_SEASON = 2017       # the first NFL season whose rookies can be on the college rosters (2016 on)
+NFL_CODES = {
+    "ARI": "Arizona Cardinals", "ATL": "Atlanta Falcons", "BAL": "Baltimore Ravens", "BUF": "Buffalo Bills",
+    "CAR": "Carolina Panthers", "CHI": "Chicago Bears", "CIN": "Cincinnati Bengals", "CLE": "Cleveland Browns",
+    "DAL": "Dallas Cowboys", "DEN": "Denver Broncos", "DET": "Detroit Lions", "GB": "Green Bay Packers",
+    "HOU": "Houston Texans", "IND": "Indianapolis Colts", "JAX": "Jacksonville Jaguars", "KC": "Kansas City Chiefs",
+    "LA": "Los Angeles Rams", "LAC": "Los Angeles Chargers", "LV": "Las Vegas Raiders", "OAK": "Oakland Raiders",
+    "MIA": "Miami Dolphins", "MIN": "Minnesota Vikings", "NE": "New England Patriots", "NO": "New Orleans Saints",
+    "NYG": "New York Giants", "NYJ": "New York Jets", "PHI": "Philadelphia Eagles", "PIT": "Pittsburgh Steelers",
+    "SEA": "Seattle Seahawks", "SF": "San Francisco 49ers", "TB": "Tampa Bay Buccaneers", "TEN": "Tennessee Titans",
+    "WAS": "Washington Commanders",
+}
+# NFL statuses of players no longer with the team (released, retired, traded): left off the page
+GONE = {"CUT", "RET", "TRD", "TRC"}
 
 NFL_TEAMS = [
     "arizona-cardinals", "atlanta-falcons", "baltimore-ravens", "buffalo-bills", "carolina-panthers",
@@ -88,7 +120,15 @@ LEAGUES = {
     "nfl": {"teams": NFL_TEAMS, "url": "https://www.nfl.com/teams/{team}/roster", "college_sport": "football",
             "site": "https://www.nfl.com", "new_season_month": 3,
             # the league's own spellings that fit more than one school: NFL.com writes Miami (OH) as "Miami (Ohio)"
-            "colleges": {"Miami": "Miami (FL)"}},
+            "colleges": {"Miami": "Miami (FL)",
+                         # nflverse's spellings (past seasons)
+                         "Miami, O.": "Miami (OH)", "Ohio U.": "Ohio", "Southern U.": "Southern", "Albany, N.Y.": "Albany",
+                         "Charleston, W. Va.": "Charleston (WV)", "Augustana, S.D.": "Augustana (SD)",
+                         "Northwestern State-Louisiana": "Northwestern State", "Northwestern State, La.": "Northwestern State",
+                         "Monmouth, N.J.": "Monmouth", "Monmouth, Ill.": "Monmouth (IL)", "Marian, Ind.": "Marian (IN)",
+                         "Wayne State, Mich.": "Wayne State (MI)", "Albany State, Ga.": "Albany State (GA)",
+                         "Texas State-San Marcos": "Texas State", "Southern Utah State": "Southern Utah",
+                         "UMass Amherst": "UMass", "Grand Valley": "Grand Valley State"}},
     "nba": {"teams": list(NBA_TEAMS), "url": "https://www.nba.com/team/{team}/{slug}", "college_sport": "basketball-mens",
             "new_season_month": 7, "colleges": {"Miami": "Miami (FL)", "St. Mary's": "Saint Mary's (CA)"}},
     "mlb": {"teams": list(MLB_TEAMS), "college_sport": "baseball", "new_season_month": 11,
@@ -103,7 +143,7 @@ LEAGUES = {
 }
 ROSTER_FIELDS = ["league", "season", "team", "name", "number", "position", "status", "height", "weight",
                  "experience", "college", "college_until", "birth_city", "birth_state", "birth_country",
-                 "pro_high_school", "profile_url"]
+                 "pro_high_school", "profile_url", "player_id", "other_name"]
 MATCH_FIELDS = ROSTER_FIELDS + ["college_school", "college_level", "matched", "college_name", "college_first",
                                 "college_last", "hometown", "home_state", "home_country", "high_school"]
 # The roster table's columns, by header text
@@ -279,6 +319,43 @@ def college_until(league: str, season: int, experience: str) -> int | None:
     return season - years - 1 if league == "nfl" else season - years
 
 
+def parse_nflverse(text: str, season: int) -> list[dict]:
+    """A season's NFL players from nflverse's roster file: everyone on a roster at the season's end (week 17-22),
+    with college ("Wisconsin; Wisconsin-Stevens Point" when he went to several) and the year he came into the
+    league, so his last college season is the fall before it."""
+    rows = []
+    for r in csv.DictReader(io.StringIO(text)):
+        name = clean(r.get("full_name") or f"{r.get('first_name', '')} {r.get('last_name', '')}")
+        if not name:
+            continue
+        legal = clean(f"{r.get('first_name', '')} {r.get('last_name', '')}")
+        years, entry = _int(r.get("years_exp")), _int(r.get("entry_year")) or _int(r.get("rookie_year"))
+        until = entry - 1 if entry else season - years - 1 if years is not None else ""
+        rows.append({"league": "NFL", "season": season, "team": NFL_CODES.get(r.get("team", ""), r.get("team", "")),
+                     "name": name, "number": r.get("jersey_number", ""), "position": r.get("position", ""),
+                     "status": r.get("status", ""), "height": r.get("height", ""), "weight": r.get("weight", ""),
+                     "experience": "" if years is None else years,
+                     # "Texas A&amp;M" in some seasons: unescape before splitting on ";"
+                     "college": "|".join(x.strip() for x in html.unescape(r.get("college") or "").split(";")
+                                         if x.strip() and x.strip() != "No College"),
+                     "college_until": until, "player_id": r.get("gsis_id") or r.get("esb_id") or "",
+                     "other_name": legal if name_key(legal) != name_key(name) else ""})
+    return rows
+
+
+def nflverse(season: int, refresh: bool) -> list[dict]:
+    fetcher = Fetcher(cache_dir=CACHE, refresh=refresh, delay=1.0, timeout=60)
+    url = NFLVERSE_URL.format(season=season)
+    try:
+        status, _, text = fetcher.get(url, remember_miss=False)
+    except Exception as exc:  # network trouble: say so, the next season still runs
+        print(f"  problem: {url}: {exc}")
+        return []
+    rows = parse_nflverse(text, season) if status == 200 else []
+    print(f"  nflverse {season}: {len(rows)} players" + ("" if rows else f" (HTTP {status})"))
+    return rows
+
+
 def scrape(league: str, season: int, refresh: bool) -> list[dict]:
     conf = LEAGUES[league]
     fetcher = Fetcher(cache_dir=CACHE, refresh=refresh, delay=2.0)
@@ -287,7 +364,7 @@ def scrape(league: str, season: int, refresh: bool) -> list[dict]:
     for team in conf["teams"]:
         url = conf["url"].format(team=team, slug=NBA_TEAMS.get(team, ""))
         label = {"nba": f"{NBA_TEAMS.get(team, '')}".title(), "mlb": MLB_TEAMS.get(team, ""),
-                 "nhl": NHL_TEAMS.get(team, "")}.get(league) or str(team).replace("-", " ").title()
+                 "nhl": NHL_TEAMS.get(team, "")}.get(league) or string.capwords(str(team).replace("-", " "))
         try:
             status, _, text = fetcher.get(url, remember_miss=False)
         except Exception as exc:  # network trouble: say which team, keep going
@@ -413,6 +490,8 @@ def match(rows: list[dict], league: str) -> list[dict]:
         if until is None and league == "nfl":            # roster files saved before college_until existed
             until = college_until(league, season, r.get("experience", ""))
         nk = name_key(_SUFFIX.sub("", r["name"]))
+        # nflverse gives the legal name too (Ahmad Gardner for Sauce Gardner): either may be on the college roster
+        keys = list(dict.fromkeys(k for k in (nk, name_key(_SUFFIX.sub("", r.get("other_name") or ""))) if k))
         listed = [x.strip() for x in (r.get("college") or "").split("|") if x.strip()]
         schools = []
         for text in listed:
@@ -424,8 +503,9 @@ def match(rows: list[dict], league: str) -> list[dict]:
         level, school = schools[-1] if schools else ("", "")
         hit, how = None, ""
         for lvl, sch in schools:
-            if (sch, nk) in idx:
-                (level, school), hit, how = (lvl, sch), idx[(sch, nk)], "yes"
+            for k in keys:
+                if not hit and (sch, k) in idx:
+                    (level, school), hit, how = (lvl, sch), idx[(sch, k)], "yes"
         if not hit and schools:
             fits = [i for lvl, sch in schools for i in by_last.get((sch, _last_name_key(r["name"])), [])
                     if until is not None and _fits(until, i) and _first_names_fit(r["name"], i["college_name"])]
@@ -471,6 +551,17 @@ def run(league: str, season: int | None, refresh: bool, match_only: bool) -> int
         if not rows:
             print(f"{roster_path} not found or empty: run without --match-only first.")
             return 1
+    elif league == "nfl" and season < season_now(league="nfl"):     # a past season: nfl.com shows only today's
+        print(f"NFL {season}: nflverse's roster file")
+        rows = nflverse(season, refresh)
+        if not rows:
+            return 1
+        write_csv(roster_path, ROSTER_FIELDS, rows)
+        print(f"-> {roster_path}")
+    elif league != "nfl" and season != season_now(league=league):
+        print(f"{league.upper()} {season}: only this season's rosters ({season_now(league=league)}) can be read; "
+              "past seasons exist for the NFL only.")
+        return 1
     else:
         print(f"{league.upper()} {season}: reading {len(LEAGUES[league]['teams'])} rosters")
         rows = scrape(league, season, refresh)
@@ -489,18 +580,154 @@ def run(league: str, season: int | None, refresh: bool, match_only: bool) -> int
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("leagues", nargs="+", choices=sorted(LEAGUES) + ["all"], metavar="league",
-                    help=f"{', '.join(LEAGUES)} or all")
-    ap.add_argument("--season", type=int, help="default: the season each league's rosters show now")
+    ap.add_argument("leagues", nargs="*", metavar="league", help=f"{', '.join(LEAGUES)} or all")
+    ap.add_argument("--season", type=seasons_arg, default=[None],
+                    help="a season or a range (2017-2026); default: the season each league's rosters show now")
     ap.add_argument("--refresh", action="store_true", help="download the rosters again")
     ap.add_argument("--match-only", action="store_true", help="redo the matching from the saved roster file")
+    ap.add_argument("--build", action="store_true", help=f"then write the Pro Pipeline page's data ({PAGE_DATA.name})")
     args = ap.parse_args(argv)
+    if not args.leagues and not args.build:
+        ap.error("name a league, or --build")
+    wrong = [x for x in args.leagues if x not in LEAGUES and x != "all"]
+    if wrong:
+        ap.error(f"unknown league {', '.join(wrong)} (choose from {', '.join(LEAGUES)}, all)")
     PRO_DIR.mkdir(parents=True, exist_ok=True)
     leagues = list(LEAGUES) if "all" in args.leagues else list(dict.fromkeys(args.leagues))
-    failed = [lg for lg in leagues if run(lg, args.season, args.refresh, args.match_only)]
+    failed = [f"{lg} {s or ''}".strip() for lg in leagues for s in args.season if run(lg, s, args.refresh, args.match_only)]
     if failed:
         print("No result for:", ", ".join(failed))
+    if args.build:
+        build_page_data()
     return 1 if failed else 0
+
+
+def seasons_arg(text: str) -> list[int]:
+    m = re.fullmatch(r"(\d{4})(?:-(\d{4}))?", text.strip())
+    if not m:
+        raise argparse.ArgumentTypeError("a season (2026) or a range (2017-2026)")
+    a, b = int(m[1]), int(m[2] or m[1])
+    return list(range(min(a, b), max(a, b) + 1))
+
+
+# ---- the Pro Pipeline page's data ------------------------------------------------------------------------------
+
+def _hometown_places(sport_name: str) -> dict[tuple[str, str], tuple[float, float]]:
+    """(hometown text, school or "") -> (lat, lon), from the sport's geocoded hometowns."""
+    out = {}
+    for r in read_csv(ROSTERS / sport_name / "hometowns.csv"):
+        try:
+            out[(r["hometown"], r.get("school", ""))] = (round(float(r["lat"]), 4), round(float(r["lon"]), 4))
+        except (TypeError, ValueError, KeyError):
+            continue
+    return out
+
+
+def _campuses() -> dict[str, tuple[str, str, float, float]]:
+    out = {}
+    for r in read_csv(CONFIG / "shared" / "school_locations.csv"):
+        try:
+            out[r["school"]] = (r["city"], r["state"], round(float(r["lat"]), 4), round(float(r["lon"]), 4))
+        except (TypeError, ValueError, KeyError):
+            continue
+    return out
+
+
+def build_page_data(out_path=PAGE_DATA, pro_dir=None) -> dict:
+    """docs/pro/pipeline.json: every pro player found with a college, once per league, with his teams by season,
+    his college and division, and his hometown and high school with the hometown's place on the map.
+
+    A player is one person across seasons: the same player on the college roster (or, not found there, the same
+    name and college) in one league; nflverse's past seasons and nfl.com's current one don't share an id. Players the league lists as released, retired or traded that season
+    (GONE) leave that season out. Columns, so the file stays small; -1 = none:
+      players.g league, n name, p position, c college (schools), lv division, h hometown, s state or country,
+      hs high school, at hometown [lat, lon] or null, m how he was matched (1 name, 2 last name, 3 hometown,
+      0 college only), t [[team, first season, last season], ...] in order."""
+    pro_dir = pro_dir or PRO_DIR
+    teams_conf = {(r["league"], r["team"].lower()): r for r in read_csv(PRO_TEAMS)}
+    campuses = _campuses()
+    leagues, teams, schools = [], [], []
+    team_ix, school_ix = {}, {}
+    people: dict[tuple, dict] = {}
+    MATCH_CODE = {"yes": 1, "likely": 2, "hometown": 3}
+    places_by_sport: dict[str, dict] = {}
+    files = sorted(pro_dir.glob("*_matched.csv"))
+    seasons_by_league = defaultdict(set)
+    for path in files:
+        league = path.name.split("_")[0]
+        if league not in LEAGUES:
+            continue
+        sport_name = LEAGUES[league]["college_sport"]
+        places = places_by_sport.setdefault(sport_name, _hometown_places(sport_name))
+        for r in read_csv(path):
+            if not r.get("college_school") or (r.get("status") or "").upper() in GONE:
+                continue
+            season = int(r["season"])
+            lg = league.upper()
+            seasons_by_league[lg].add(season)
+            tkey = (lg, (r["team"] or "").lower())
+            if tkey not in team_ix:
+                t = teams_conf.get(tkey, {})
+                team_ix[tkey] = len(teams)
+                lat, lon = t.get("lat"), t.get("lon")
+                teams.append([lg, t.get("name") or r["team"], t.get("city", ""), t.get("state", ""),
+                              float(lat) if lat else None, float(lon) if lon else None])
+            school = r["college_school"]
+            if school not in school_ix:
+                school_ix[school] = len(schools)
+                c = campuses.get(school)
+                schools.append([school, c[0] if c else "", c[1] if c else "", c[2] if c else None, c[3] if c else None])
+            # one person: the college roster's player when he was found there (nflverse calls Sauce Gardner
+            # "Ahmad Gardner" in some seasons), else his name at that college
+            key = ((lg, school, name_key(r["college_name"]), r.get("college_first", "")) if r.get("college_name")
+                   else (lg, school, name_key(_SUFFIX.sub("", r["name"]))))
+            p = people.get(key)
+            if p is None:
+                p = people[key] = {"g": lg, "n": r["name"], "p": r.get("position", ""), "c": school_ix[school],
+                                   "lv": r.get("college_level", ""), "h": "", "s": "", "hs": "", "at": None,
+                                   "m": MATCH_CODE.get(r.get("matched", ""), 0), "seasons": {}}
+            p["seasons"][season] = team_ix[tkey]
+            if season >= max(p["seasons"]):          # the latest season names him and his position
+                p["n"], p["p"] = r["name"], r.get("position", "") or p["p"]
+            home = r.get("hometown", "")
+            if home and not p["h"]:
+                country = r.get("home_country", "")
+                p["h"], p["s"] = home, r.get("home_state") or (country if country not in ("", "USA") else "")
+                p["at"] = places.get((home, "")) or places.get((home, school))
+            hs = r.get("high_school") or r.get("pro_high_school") or ""
+            if hs and not p["hs"]:
+                p["hs"] = hs
+            if p["m"] == 0 and r.get("matched"):
+                p["m"] = MATCH_CODE.get(r["matched"], 0)
+    for lg in sorted(seasons_by_league, key=lambda x: list(LEAGUES).index(x.lower())):
+        conf = LEAGUES[lg.lower()]
+        leagues.append({"id": lg, "sport": conf["college_sport"], "seasons": sorted(seasons_by_league[lg])})
+    rows = []
+    for p in people.values():
+        stints = []
+        for season in sorted(p["seasons"]):
+            t = p["seasons"][season]
+            if stints and stints[-1][0] == t and stints[-1][2] in (season - 1, season - 2):
+                stints[-1][2] = season
+            else:
+                stints.append([t, season, season])
+        rows.append({**{k: v for k, v in p.items() if k != "seasons"}, "t": stints})
+    rows.sort(key=lambda p: (p["g"], p["n"]))
+    lg_ix = {x["id"]: i for i, x in enumerate(leagues)}
+    cols = {k: [] for k in ("g", "n", "p", "c", "lv", "h", "s", "hs", "at", "m", "t")}
+    for p in rows:
+        for k in cols:
+            cols[k].append(lg_ix[p["g"]] if k == "g" else p[k])
+    data = {"leagues": leagues, "teams": teams, "schools": schools, "players": cols, "N": len(rows),
+            "built": dt.date.today().isoformat()}
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(data, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
+    by_lg = Counter(p["g"] for p in rows)
+    print(f"{len(rows)} pro players with a college ({', '.join(f'{k} {v}' for k, v in by_lg.items())}); "
+          f"{sum(1 for p in rows if p['at'])} with a hometown on the map; "
+          f"{sum(1 for t in teams if t[4] is None)} teams with no place in {PRO_TEAMS.name}; "
+          f"{sum(1 for s in schools if s[3] is None)} colleges with no campus -> {out_path}")
+    return data
 
 
 if __name__ == "__main__":

@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pro Pipeline: High School to College to Pro</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="description" content="Where today's and recent NFL, NBA, MLB and NHL players went to high school and college, mapped from the college rosters.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="common.css">
+<style>
+.tgrid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 14px; height: max(480px, calc(100dvh - var(--bar-h, 80px) - 52px)); }
+:root { --home: #2563eb; --college: var(--accent); --pro: #111827; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --home: #60a5fa; --pro: #f8fafc; } }
+.lgseg button { font-weight: 700; font-size: 13px; padding: 7px 14px; }
+.tools .field { width: auto; height: 36px; padding-top: 0; padding-bottom: 0; border-radius: 18px; font-size: 13px; font-weight: 600; box-shadow: var(--shadow); }
+.tools select.field { max-width: 230px; }
+.tools .search { width: min(300px, 100%); padding-left: 14px; }
+.seasons { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--muted); }
+.seasons select.field { max-width: 92px; padding-right: 26px; }
+.key .k { display: inline-flex; align-items: center; gap: 5px; }
+.key .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--home); }
+.key .sq { width: 10px; height: 10px; border-radius: 2px; background: var(--college); }
+.key .star { color: var(--pro); font-size: 14px; line-height: 1; }
+.big { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+.big div { display: flex; flex-direction: column; }
+.big b { font: 800 28px/1 var(--display); font-variant-numeric: tabular-nums; }
+.big small { color: var(--muted); font-size: 12px; line-height: 1.3; margin-top: 2px; }
+.pcard { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.pstep { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 2px 10px; padding: 10px 12px; position: relative; }
+.pstep + .pstep { border-top: 1px solid var(--line); }
+.pstep .ic { grid-row: span 2; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 13px; font-weight: 700; }
+.pstep.home .ic { background: var(--home); }
+.pstep.college .ic { background: var(--college); border-radius: 7px; }
+.pstep.pro .ic { background: var(--pro); color: var(--panel); }
+.pstep .what { font: 600 11px/1.2 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.pstep .val { font-weight: 600; font-size: 15px; }
+.pstep .val small { font-weight: 400; color: var(--muted); font-size: 13px; }
+.pstep .val button { all: unset; cursor: pointer; border-bottom: 1px dotted var(--muted); }
+.pstep .val button:hover { border-bottom-color: var(--fg); }
+.pstep .val button:focus-visible { outline: 2px solid var(--focus); }
+.tl li.pl { grid-template-columns: minmax(0, 1fr) auto; }
+.tl .sub2 { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: -2px; }
+.more { align-self: flex-start; }
+@media (max-width: 760px) { .tools .search { width: 100%; order: 10; } }
+</style>
+</head>
+<body>
+<div class="loading" id="loading">Loading pro players…</div>
+
+<header class="bar" id="bar">
+  <div class="brand card">
+    <h1>Pro <span>Pipeline</span></h1>
+    <p class="sub" id="sub">High school → college → pro</p>
+    <div class="fchips" id="fchips" hidden></div>
+  </div>
+  <div class="tools">
+    <a class="btn" href="index.html" aria-label="All sports" title="All sports">
+      <svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2.2 2"/><circle cx="9" cy="2.5" r="1.8" fill="currentColor"/><circle cx="15.5" cy="9" r="1.8" fill="currentColor"/><circle cx="9" cy="15.5" r="1.8" fill="currentColor"/><circle cx="2.5" cy="9" r="1.8" fill="currentColor"/></svg><span class="txt">All sports</span>
+    </a>
+    <div class="seg lgseg" id="lg" role="group" aria-label="League"></div>
+    <label class="vh" for="team">Team</label>
+    <select class="field" id="team"></select>
+    <span class="seasons" id="seasonsBox" hidden>
+      <label class="vh" for="from">From season</label><select class="field" id="from"></select>
+      <span>to</span>
+      <label class="vh" for="to">To season</label><select class="field" id="to"></select>
+    </span>
+    <label class="vh" for="q">Find a player, college or high school</label>
+    <input class="field search" id="q" list="qList" placeholder="Player, college or high school" autocomplete="off" spellcheck="false">
+    <datalist id="qList"></datalist>
+    <div style="position:relative">
+      <button type="button" class="btn" id="share" aria-label="Copy a link to this view" title="Copy a link to this view">
+        <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M7.5 10.5a3 3 0 0 0 4.2 0l2.6-2.6a3 3 0 0 0-4.2-4.2l-.9.9M10.5 7.5a3 3 0 0 0-4.2 0L3.7 10.1a3 3 0 0 0 4.2 4.2l.9-.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg><span class="txt">Copy link</span>
+      </button>
+      <div class="toast" id="toast" role="status" hidden></div>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <div class="head">
+    <span class="note" id="hint">Hover a college or a team; click one to follow its players. Click a hometown to see one player's path.</span>
+    <span class="key"><span class="k"><span class="dot"></span>Hometown</span><span class="k"><span class="sq"></span>College</span><span class="k"><span class="star">★</span>Pro team</span></span>
+  </div>
+  <div class="tgrid">
+    <div class="tmap" id="tmap">
+      <canvas id="cv" aria-label="Map of pro players' hometowns, colleges and teams. The lists beside it give the same numbers."></canvas>
+      <div class="ttip" id="ttip" hidden></div>
+    </div>
+    <aside class="tside" id="side" aria-live="polite"></aside>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+// The Pro Pipeline: pro players (NFL, NBA, MLB, NHL) traced back to their college and high school.
+// Its data, docs/pro/pipeline.json, comes from `python3 scripts/pro_rosters.py --build`: one row per player per
+// league with his teams by season, his college (matched on that sport's college rosters) and, when he was found
+// there, the hometown and high school that roster gives. The view is kept in the address after # (lg, team, from,
+// to, college, hs, st, p), so a link opens the same view.
+(async function () {
+  const $ = (id) => document.getElementById(id);
+  const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const fmt = d3.format(",");
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const plural = (n, w) => `${fmt(n)} ${w}${n === 1 ? "" : "s"}`;
+
+  let D;
+  try { const r = await fetch("pro/pipeline.json"); if (!r.ok) throw new Error(r.status); D = await r.json(); }
+  catch {
+    $("loading").classList.add("failed");
+    $("loading").textContent = "The pro players didn't load. If you opened this file directly, serve the folder instead (python -m http.server), or reload to try again.";
+    return;
+  }
+  const P = D.players, N = D.N, LEAGUES = D.leagues, TEAMS = D.teams, SCHOOLS = D.schools;
+  const SPORT = { football: "football", "basketball-mens": "men's basketball", baseball: "baseball", "hockey-mens": "men's hockey" };
+  const DIV = { FBS: "FBS", FCS: "FCS", D1: "Division I", D2: "Division II", D3: "Division III", NAIA: "NAIA", JUCO: "junior college" };
+  const HOW = { 1: "found by name on the college roster", 2: "found by last name and first name on the college roster", 3: "found by name and birthplace on a college roster", 0: "not found on the college roster: no hometown" };
+  const lastTeam = (i) => P.t[i][P.t[i].length - 1][0];
+  const hsKey = (i) => P.hs[i] ? `${P.hs[i]}${P.s[i] ? ` (${P.s[i]})` : ""}` : "";
+
+  // ---------- the view ----------
+  const st = { lg: 0, team: -1, from: 0, to: 9999, college: -1, hs: "", state: "", p: -1 };
+  const lgSeasons = () => LEAGUES[st.lg].seasons;
+  function readHash() {
+    const q = new URLSearchParams(location.hash.slice(1));
+    const lg = LEAGUES.findIndex((x) => x.id === (q.get("lg") || "").toUpperCase());
+    st.lg = lg >= 0 ? lg : 0;
+    const ss = lgSeasons();
+    st.from = Math.max(ss[0], +q.get("from") || ss[0]); st.to = Math.min(ss[ss.length - 1], +q.get("to") || ss[ss.length - 1]);
+    if (st.from > st.to) [st.from, st.to] = [ss[0], ss[ss.length - 1]];
+    const lgId = LEAGUES[st.lg].id;
+    st.team = TEAMS.findIndex((t) => t[0] === lgId && t[1] === q.get("team"));
+    st.college = SCHOOLS.findIndex((s) => s[0] === q.get("college"));
+    st.hs = q.get("hs") || ""; st.state = q.get("st") || "";
+    const pn = q.get("p");
+    st.p = -1;
+    if (pn) for (let i = 0; i < N; i++) if (P.g[i] === st.lg && P.n[i] === pn && (st.college < 0 || P.c[i] === st.college)) { st.p = i; break; }
+  }
+  function writeHash() {
+    const q = new URLSearchParams(), ss = lgSeasons();
+    if (st.lg) q.set("lg", LEAGUES[st.lg].id);
+    if (st.team >= 0) q.set("team", TEAMS[st.team][1]);
+    if (st.from !== ss[0]) q.set("from", st.from);
+    if (st.to !== ss[ss.length - 1]) q.set("to", st.to);
+    if (st.college >= 0) q.set("college", SCHOOLS[st.college][0]);
+    if (st.hs) q.set("hs", st.hs);
+    if (st.state) q.set("st", st.state);
+    if (st.p >= 0) q.set("p", P.n[st.p]);
+    const h = q.toString();
+    try { history.replaceState(null, "", h ? `#${h}` : location.pathname + location.search); } catch { /* a sandboxed preview */ }
+  }
+  const inRange = (i) => P.t[i].some(([, a, b]) => b >= st.from && a <= st.to);
+  const onTeam = (i, t) => P.t[i].some(([x, a, b]) => x === t && b >= st.from && a <= st.to);
+  function passes(i) {
+    return P.g[i] === st.lg && inRange(i) && (st.team < 0 || onTeam(i, st.team)) && (st.college < 0 || P.c[i] === st.college)
+      && (!st.hs || hsKey(i) === st.hs) && (!st.state || P.s[i] === st.state);
+  }
+
+  // ---------- counting ----------
+  let M = null;
+  function compute() {
+    const ids = [], byC = new Map(), byH = new Map(), byS = new Map(), byT = new Map(), routes = new Map();
+    const add = (m, k) => m.set(k, (m.get(k) || 0) + 1);
+    let withHome = 0;
+    for (let i = 0; i < N; i++) {
+      if (!passes(i)) continue;
+      ids.push(i);
+      add(byC, P.c[i]);
+      if (P.hs[i]) add(byH, hsKey(i));
+      if (P.s[i]) add(byS, P.s[i]);
+      if (P.at[i]) withHome++;
+      const seen = new Set();
+      for (const [t, a, b] of P.t[i]) {
+        if (b < st.from || a > st.to || seen.has(t)) continue;
+        if (st.team >= 0 && t !== st.team) continue;
+        seen.add(t); add(byT, t); add(routes, P.c[i] * TEAMS.length + t);
+      }
+    }
+    const top = (m) => [...m.entries()].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])));
+    M = { ids, withHome, colleges: top(byC), hs: top(byH), states: top(byS), teams: top(byT), byC, byT,
+      routes: [...routes.entries()].map(([k, n]) => ({ c: Math.floor(k / TEAMS.length), t: k % TEAMS.length, n })).sort((a, b) => b.n - a.n) };
+  }
+
+  // ---------- the map ----------
+  // A conic projection of the lower 48 and southern Canada, so the Canadian teams have a place (Albers USA has none).
+  const box = $("tmap"), cv = $("cv"), tip = $("ttip"), g = cv.getContext("2d");
+  const proj = d3.geoConicEqualArea().parallels([29.5, 45.5]).rotate([96, 0]);
+  const FIT = { type: "MultiPoint", coordinates: [[-124.5, 48.6], [-123.1, 49.3], [-113.5, 53.5], [-73.5, 45.6], [-67, 44.8], [-80.1, 25.2], [-97.2, 25.9], [-117.1, 32.6]] };
+  let size = { w: 0, h: 0 }, countryPaths = [], statePaths = [], countries = null, states = null;
+  const xyC = [], xyT = [];
+  let hits = [];
+  function layout() {
+    const r = box.getBoundingClientRect();
+    if (!r.width) return;
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    size = { w: r.width, h: r.height, dpr };
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    proj.fitExtent([[16, 16], [r.width - 16, r.height - 16]], FIT);
+    const path = d3.geoPath(proj);
+    countryPaths = countries ? countries.map((f) => new Path2D(path(f) || "")) : [];
+    statePaths = states ? states.map((f) => new Path2D(path(f) || "")) : [];
+    SCHOOLS.forEach((s, i) => { xyC[i] = s[3] != null ? proj([s[4], s[3]]) : null; });
+    // teams that share a stadium (Giants and Jets, Rams and Chargers) sit side by side
+    const taken = new Map();
+    TEAMS.forEach((t, i) => {
+      if (t[4] == null) { xyT[i] = null; return; }
+      const p = proj([t[5], t[4]]), key = `${t[0]}|${Math.round(p[0])}|${Math.round(p[1])}`, k = taken.get(key) || 0;
+      taken.set(key, k + 1);
+      xyT[i] = [p[0] + k * 13, p[1]];
+    });
+    draw();
+  }
+  const ptHome = (i) => P.at[i] ? proj([P.at[i][1], P.at[i][0]]) : null;
+  function curve(a, b, bendK = 0.2) {
+    const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, bend = Math.min(bendK * len, 80);
+    return { a, b, c: [(a[0] + b[0]) / 2 + dy / len * bend, (a[1] + b[1]) / 2 - dx / len * bend] };
+  }
+  const stroke = (q) => { g.beginPath(); g.moveTo(q.a[0], q.a[1]); g.quadraticCurveTo(q.c[0], q.c[1], q.b[0], q.b[1]); g.stroke(); };
+  function arrow(q, color, w) {
+    const ang = Math.atan2(q.b[1] - q.c[1], q.b[0] - q.c[0]), s = 5 + w * 1.5, tp = [q.b[0] - Math.cos(ang) * 8, q.b[1] - Math.sin(ang) * 8];
+    g.beginPath(); g.moveTo(tp[0], tp[1]);
+    g.lineTo(tp[0] - Math.cos(ang - .45) * s, tp[1] - Math.sin(ang - .45) * s);
+    g.lineTo(tp[0] - Math.cos(ang + .45) * s, tp[1] - Math.sin(ang + .45) * s);
+    g.closePath(); g.fillStyle = color; g.fill();
+  }
+  function star(p, r, fill, ring) {
+    g.beginPath();
+    for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * .45 : r; g.lineTo(p[0] + rr * Math.cos(a), p[1] + rr * Math.sin(a)); }
+    g.closePath(); g.fillStyle = fill; g.fill(); g.lineWidth = 1.6; g.strokeStyle = ring; g.stroke();
+  }
+  function square(p, r, fill, ring, lw = 1.2) {
+    g.beginPath(); g.roundRect(p[0] - r, p[1] - r, r * 2, r * 2, Math.max(1, r * .3));
+    g.fillStyle = fill; g.fill(); g.lineWidth = lw; g.strokeStyle = ring; g.stroke();
+  }
+  function label(p, text, color, dy = 0) {
+    g.font = `700 12.5px ${css("--display")}`; g.textBaseline = "middle";
+    const tw = g.measureText(text).width, x = Math.min(p[0] + 11, size.w - tw - 6), y = p[1] + dy;
+    g.lineWidth = 4; g.strokeStyle = css("--panel"); g.lineJoin = "round"; g.strokeText(text, x, y); g.fillStyle = color; g.fillText(text, x, y);
+  }
+  let hover = null;
+  function draw() {
+    const { w, h, dpr } = size;
+    if (!w || !M) return;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+    g.fillStyle = css("--land"); for (const p of countryPaths) g.fill(p);
+    g.strokeStyle = css("--border"); g.lineWidth = .6; for (const p of statePaths) g.stroke(p);
+    g.lineWidth = .9; for (const p of countryPaths) g.stroke(p);
+    hits = [];
+    if (st.p >= 0) drawPlayer(st.p); else drawOverview();
+  }
+  function drawOverview() {
+    const cHome = css("--home"), cCol = css("--college"), cPro = css("--pro"), panel = css("--panel"), muted = css("--muted");
+    const few = M.ids.length <= 450;
+    const hl = hover && (hover.kind === "c" || hover.kind === "t") ? hover : null;
+    // hometown -> college, for a small set (one team, one college, one high school)
+    if (few) {
+      g.lineWidth = .8; g.strokeStyle = cHome; g.globalAlpha = .28;
+      for (const i of M.ids) { const a = ptHome(i), b = xyC[P.c[i]]; if (a && b) stroke(curve(a, b, .12)); }
+      g.globalAlpha = 1;
+    }
+    // college -> team
+    // the whole league at once would be a tangle: its busiest routes only, and all of one college's or team's on hover
+    const drawable = M.routes.filter((r) => xyC[r.c] && xyT[r.t]);
+    const shown = few ? drawable : hl ? drawable.filter((r) => (hl.kind === "c" ? r.c : r.t) === hl.i || drawable.indexOf(r) < 120) : drawable.slice(0, 120);
+    const maxN = Math.max(1, ...shown.map((r) => r.n));
+    g.lineCap = "round";
+    for (let k = shown.length - 1; k >= 0; k--) {
+      const r = shown[k], on = !hl || (hl.kind === "c" ? r.c === hl.i : r.t === hl.i);
+      g.globalAlpha = on ? (hl ? .75 : .1 + .45 * Math.sqrt(r.n / maxN)) : .04;
+      g.strokeStyle = cCol; g.lineWidth = .6 + 3.2 * Math.sqrt(r.n / maxN) + (hl && on ? .8 : 0);
+      stroke(curve(xyC[r.c], xyT[r.t]));
+    }
+    g.globalAlpha = 1;
+    // hometowns
+    const r0 = few ? 3.2 : 2.1;
+    g.fillStyle = cHome; g.globalAlpha = few ? .85 : .45;
+    for (const i of M.ids) { const p = ptHome(i); if (!p) continue; g.beginPath(); g.arc(p[0], p[1], r0, 0, Math.PI * 2); g.fill(); hits.push({ kind: "h", i, x: p[0], y: p[1], r: Math.max(5, r0 + 2) }); }
+    g.globalAlpha = 1;
+    // colleges
+    const maxC = Math.max(1, ...M.colleges.map((x) => x[1]));
+    for (const [c, n] of [...M.colleges].reverse()) {
+      const p = xyC[c]; if (!p) continue;
+      const r = 2.2 + 5.5 * Math.sqrt(n / maxC), strong = hl && hl.kind === "c" && hl.i === c;
+      square(p, r, cCol, strong ? css("--fg") : panel, strong ? 2.4 : 1.1);
+      hits.push({ kind: "c", i: c, x: p[0], y: p[1], r: r + 3 });
+    }
+    // teams
+    TEAMS.forEach((t, i) => {
+      if (t[0] !== LEAGUES[st.lg].id || !xyT[i]) return;
+      const n = M.byT.get(i) || 0, strong = (hl && hl.kind === "t" && hl.i === i) || st.team === i;
+      g.globalAlpha = n ? 1 : .3;
+      star(xyT[i], strong ? 10 : 7.5, n ? cPro : muted, panel);
+      g.globalAlpha = 1;
+      hits.push({ kind: "t", i, x: xyT[i][0], y: xyT[i][1], r: 10 });
+    });
+    if (st.team >= 0 && xyT[st.team]) label(xyT[st.team], TEAMS[st.team][1], css("--fg"), -14);
+    if (st.college >= 0 && xyC[st.college]) label(xyC[st.college], SCHOOLS[st.college][0], cCol, 14);
+  }
+  function drawPlayer(i) {
+    const cHome = css("--home"), cCol = css("--college"), cPro = css("--pro"), panel = css("--panel");
+    const home = ptHome(i), col = xyC[P.c[i]], teams = P.t[i].map(([t]) => t).filter((t, k, a) => a.indexOf(t) === k && xyT[t]);
+    g.lineCap = "round";
+    if (home && col) { const q = curve(home, col); g.strokeStyle = cHome; g.lineWidth = 3; stroke(q); arrow(q, cHome, 3); }
+    let prev = col;
+    teams.forEach((t, k) => {
+      if (!prev) return;
+      const q = curve(prev, xyT[t]);
+      g.strokeStyle = k ? cPro : cCol; g.lineWidth = 3; g.setLineDash(k ? [6, 6] : []); stroke(q); g.setLineDash([]); arrow(q, k ? cPro : cCol, 3);
+      prev = xyT[t];
+    });
+    if (home) { g.beginPath(); g.arc(home[0], home[1], 7, 0, Math.PI * 2); g.fillStyle = cHome; g.fill(); g.lineWidth = 2; g.strokeStyle = panel; g.stroke(); label(home, P.h[i], cHome); }
+    if (col) { square(col, 8, cCol, panel, 2); label(col, SCHOOLS[P.c[i]][0], cCol); hits.push({ kind: "c", i: P.c[i], x: col[0], y: col[1], r: 11 }); }
+    teams.forEach((t, k) => { star(xyT[t], 11, cPro, panel); label(xyT[t], TEAMS[t][1], css("--fg"), k % 2 ? 14 : -14); hits.push({ kind: "t", i: t, x: xyT[t][0], y: xyT[t][1], r: 12 }); });
+  }
+
+  // ---------- pointing ----------
+  function hitAt(mx, my) {
+    let best = null, bd = Infinity;
+    // colleges and teams win over the hometown dots under them
+    for (const h of hits) {
+      const d = Math.hypot(h.x - mx, h.y - my), pri = h.kind === "h" ? 4 : 0;
+      if (d <= h.r && d + pri < bd) { bd = d + pri; best = h; }
+    }
+    return best;
+  }
+  function tipHTML(h) {
+    if (h.kind === "c") {
+      const s = SCHOOLS[h.i], n = M.byC.get(h.i) || 0;
+      return `<b>${esc(s[0])}</b>${s[1] ? ` <span class="note">${esc(s[1])}, ${esc(s[2])}</span>` : ""}<br>${plural(n, "pro player")}`;
+    }
+    if (h.kind === "t") { const t = TEAMS[h.i], n = M.byT.get(h.i) || 0; return `<b>${esc(t[1])}</b><br>${plural(n, "player")} from these colleges`; }
+    const here = M.ids.filter((i) => P.at[i] && P.at[i][0] === P.at[h.i][0] && P.at[i][1] === P.at[h.i][1]);
+    const names = here.slice(0, 4).map((i) => `${esc(P.n[i])} <span class="note">${esc(SCHOOLS[P.c[i]][0])}</span>`).join("<br>");
+    return `<b>${esc(P.h[h.i])}</b><br>${names}${here.length > 4 ? `<br><span class="note">and ${here.length - 4} more</span>` : ""}`;
+  }
+  function showTip(html, x, y) {
+    tip.innerHTML = html; tip.hidden = false;
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    tip.style.left = Math.max(6, Math.min(x + 14, size.w - tw - 6)) + "px";
+    tip.style.top = Math.max(6, y - th - 10 < 6 ? y + 16 : y - th - 10) + "px";
+  }
+  const at = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  cv.addEventListener("pointermove", (e) => {
+    const [x, y] = at(e), h = hitAt(x, y);
+    cv.classList.toggle("hot", !!h);
+    const same = h && hover && h.kind === hover.kind && h.i === hover.i;
+    if (!same) { hover = h; draw(); }
+    if (h) showTip(tipHTML(h), x, y); else tip.hidden = true;
+  });
+  cv.addEventListener("pointerleave", () => { tip.hidden = true; if (hover) { hover = null; draw(); } });
+  cv.addEventListener("click", (e) => {
+    const h = hitAt(...at(e));
+    if (!h) return;
+    tip.hidden = true;
+    if (h.kind === "c") set({ college: h.i, p: -1 });
+    else if (h.kind === "t") set({ team: h.i, p: -1 });
+    else {
+      const here = M.ids.filter((i) => P.at[i] && P.at[i][0] === P.at[h.i][0] && P.at[i][1] === P.at[h.i][1]);
+      if (here.length === 1) set({ p: h.i }); else set({ hs: "", state: "", p: -1, college: -1, team: st.team, _list: here });
+    }
+  });
+
+  // ---------- the side panel ----------
+  let tab = "colleges", listed = null;
+  function viewTitle() {
+    const lg = LEAGUES[st.lg];
+    if (st.team >= 0) return TEAMS[st.team][1];
+    if (st.college >= 0) return `${lg.id} players from ${SCHOOLS[st.college][0]}`;
+    if (st.hs) return `${lg.id} players from ${st.hs}`;
+    if (st.state) return `${lg.id} players from ${st.state}`;
+    return `${lg.id} players`;
+  }
+  const seasonText = () => st.from === st.to ? `${st.from}` : `${st.from}–${st.to}`;
+  function teamYears(i) {
+    return P.t[i].map(([t, a, b]) => `${esc(TEAMS[t][1])} <small>${a === b ? a : `${a}–${b}`}</small>`).join(", ");
+  }
+  function playerCard(i) {
+    const s = SCHOOLS[P.c[i]], div = DIV[P.lv[i]] || P.lv[i];
+    const btn = (k, v, text) => `<button type="button" data-set="${k}" data-v="${esc(v)}">${esc(text)}</button>`;
+    return `<div class="sel-head"><div><h2>${esc(P.n[i])}</h2><p class="note">${esc(P.p[i] || "")}${P.p[i] ? " · " : ""}${LEAGUES[P.g[i]].id}</p></div>
+        <button type="button" class="x" data-clear="p" aria-label="Back to the list">×</button></div>
+      <div class="pcard">
+        <div class="pstep home"><span class="ic" aria-hidden="true">1</span><span class="what">Hometown &amp; high school</span>
+          <span class="val">${P.h[i] ? esc(P.h[i]) : "<small>Not on the college roster</small>"}${P.hs[i] ? `<br>${btn("hs", hsKey(i), P.hs[i])}` : ""}</span></div>
+        <div class="pstep college"><span class="ic" aria-hidden="true">2</span><span class="what">College</span>
+          <span class="val">${btn("college", P.c[i], s[0])} <small>${esc(div || "")}${s[1] ? ` · ${esc(s[1])}, ${esc(s[2])}` : ""}</small></span></div>
+        <div class="pstep pro"><span class="ic" aria-hidden="true">3</span><span class="what">${LEAGUES[P.g[i]].id}</span>
+          <span class="val">${teamYears(i)}</span></div>
+      </div>
+      <p class="note">College ${HOW[P.m[i]]}.</p>`;
+  }
+  const li = (name, n, max, key, v, sub) => `<li><span class="nm"><button type="button" data-set="${key}" data-v="${esc(v)}">${esc(name)}</button></span>
+      <span class="v"><b>${fmt(n)}</b></span><span class="b"><span style="width:${(100 * n / max).toFixed(1)}%"></span></span>${sub ? `<span class="sub2">${sub}</span>` : ""}</li>`;
+  function listOf(rows, key, name, limit = 30) {
+    if (!rows.length) return `<p class="note">None with these filters.</p>`;
+    const max = rows[0][1];
+    return `<ul class="tl">${rows.slice(0, limit).map(([k, n]) => li(name(k), n, max, key, k)).join("")}</ul>${rows.length > limit ? `<p class="note">Top ${limit} of ${fmt(rows.length)}.</p>` : ""}`;
+  }
+  function playersList(ids, limit = 150) {
+    const seasons = (i) => P.t[i].reduce((s, [, a, b]) => s + b - a + 1, 0);
+    const rows = [...ids].sort((a, b) => seasons(b) - seasons(a) || P.n[a].localeCompare(P.n[b]));
+    return `<ul class="tl">${rows.slice(0, limit).map((i) => `<li class="pl"><span class="nm"><button type="button" data-p="${i}">${esc(P.n[i])}</button>${P.p[i] ? ` <span class="note">${esc(P.p[i])}</span>` : ""}</span>
+        <span class="v">${esc(TEAMS[lastTeam(i)][1])}</span><span class="sub2">${esc(SCHOOLS[P.c[i]][0])}${P.hs[i] ? ` · ${esc(P.hs[i])}` : ""}${P.h[i] ? ` · ${esc(P.h[i])}` : ""}</span></li>`).join("")}</ul>
+      ${rows.length > limit ? `<p class="note">${fmt(limit)} of ${fmt(rows.length)}, longest careers first. Pick a team, college or high school to narrow it.</p>` : ""}`;
+  }
+  function renderSide() {
+    const side = $("side");
+    if (st.p >= 0) { side.innerHTML = playerCard(st.p); return; }
+    const tabs = [["colleges", "Colleges", M.colleges.length], ["hs", "High schools", M.hs.length], ["states", "Home states", M.states.length],
+      ["teams", "Teams", M.teams.length], ["players", "Players", M.ids.length]];
+    if (listed) tab = "players";
+    const body = {
+      colleges: () => listOf(M.colleges, "college", (c) => SCHOOLS[c][0]),
+      hs: () => listOf(M.hs, "hs", (k) => k),
+      states: () => listOf(M.states, "state", (k) => k),
+      teams: () => listOf(M.teams, "team", (t) => TEAMS[t][1]),
+      players: () => (listed ? `<p class="note">${plural(listed.length, "player")} from that hometown. <button type="button" class="link" data-unlist>Show all</button></p>` : "") + playersList(listed || M.ids),
+    }[tab]();
+    const lg = LEAGUES[st.lg];
+    side.innerHTML = `<div class="sel-head"><div><h2>${esc(viewTitle())}</h2>
+        <p class="note">On an ${lg.id} roster ${st.from === st.to ? "in" : "from"} ${seasonText()} · college ${esc(SPORT[lg.sport] || lg.sport)}</p></div></div>
+      <div class="big">
+        <div><b>${fmt(M.ids.length)}</b><small>pro players with a known college</small></div>
+        <div><b>${fmt(M.withHome)}</b><small>traced to a hometown</small></div>
+        <div><b>${fmt(M.colleges.length)}</b><small>colleges</small></div>
+        <div><b>${fmt(M.hs.length)}</b><small>high schools</small></div>
+      </div>
+      <div class="tabset"><div class="tabs" role="tablist" aria-label="Lists">${tabs.map(([k, name, n]) =>
+        `<button type="button" role="tab" data-tab="${k}" aria-selected="${k === tab}">${name} <span class="ct">${fmt(n)}</span></button>`).join("")}</div>
+        <div class="tabpanel" role="tabpanel">${body}</div></div>
+      <p class="fine">Pro rosters from each league (past NFL seasons from nflverse), matched by name to the college rosters on this site, which start in 2016:
+        older players, and players who skipped college, aren't here. A player's hometown and high school are the ones his college roster gives.</p>`;
+  }
+  $("side").addEventListener("click", (e) => {
+    const t = e.target.closest("[data-tab],[data-set],[data-p],[data-clear],[data-unlist]");
+    if (!t) return;
+    if (t.dataset.tab) { tab = t.dataset.tab; listed = null; renderSide(); return; }
+    if (t.dataset.unlist !== undefined) { listed = null; renderSide(); return; }
+    if (t.dataset.p) { set({ p: +t.dataset.p }); return; }
+    if (t.dataset.clear) { set({ p: -1 }); return; }
+    const k = t.dataset.set, v = t.dataset.v;
+    set({ [k]: k === "college" || k === "team" ? +v : v, p: -1 });
+  });
+
+  // ---------- the toolbar ----------
+  $("lg").innerHTML = LEAGUES.map((l, i) => `<button type="button" data-lg="${i}" aria-pressed="false">${l.id}</button>`).join("");
+  $("lg").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-lg]");
+    if (!b || +b.dataset.lg === st.lg) return;
+    const ss = LEAGUES[+b.dataset.lg].seasons;
+    set({ lg: +b.dataset.lg, team: -1, college: -1, hs: "", state: "", p: -1, from: ss[0], to: ss[ss.length - 1] }, true);
+  });
+  $("team").addEventListener("change", () => set({ team: +$("team").value, p: -1 }));
+  $("from").addEventListener("change", () => { const a = +$("from").value; set({ from: a, to: Math.max(a, st.to) }); });
+  $("to").addEventListener("change", () => { const b = +$("to").value; set({ to: b, from: Math.min(b, st.from) }); });
+  function fillToolbar() {
+    const lg = LEAGUES[st.lg];
+    $("lg").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", +b.dataset.lg === st.lg));
+    const teams = TEAMS.map((t, i) => [t, i]).filter(([t]) => t[0] === lg.id).sort((a, b) => a[0][1].localeCompare(b[0][1]));
+    $("team").innerHTML = `<option value="-1">All ${lg.id} teams</option>` + teams.map(([t, i]) => `<option value="${i}">${esc(t[1])}</option>`).join("");
+    $("team").value = st.team;
+    const ss = lg.seasons, opts = ss.map((s) => `<option value="${s}">${s}</option>`).join("");
+    $("seasonsBox").hidden = ss.length < 2;
+    $("from").innerHTML = opts; $("to").innerHTML = opts; $("from").value = st.from; $("to").value = st.to;
+    // the search's suggestions: this league's players, colleges and high schools
+    const seen = new Set(), opt = [];
+    for (let i = 0; i < N; i++) {
+      if (P.g[i] !== st.lg) continue;
+      opt.push(`Player: ${P.n[i]} (${SCHOOLS[P.c[i]][0]})`);
+      const c = `College: ${SCHOOLS[P.c[i]][0]}`, h = P.hs[i] ? `High school: ${hsKey(i)}` : "";
+      if (!seen.has(c)) { seen.add(c); opt.push(c); }
+      if (h && !seen.has(h)) { seen.add(h); opt.push(h); }
+    }
+    $("qList").innerHTML = opt.sort().map((o) => `<option value="${esc(o)}">`).join("");
+    $("sub").textContent = `High school → college → ${lg.id} · ${ss.length > 1 ? `rosters ${ss[0]}–${ss[ss.length - 1]}` : `this season's rosters`}`;
+  }
+  $("q").addEventListener("change", () => {
+    const v = $("q").value.trim();
+    let m;
+    if ((m = /^College: (.+)$/.exec(v))) { const c = SCHOOLS.findIndex((s) => s[0] === m[1]); if (c >= 0) set({ college: c, team: -1, hs: "", state: "", p: -1 }); }
+    else if ((m = /^High school: (.+)$/.exec(v))) set({ hs: m[1], college: -1, team: -1, state: "", p: -1 });
+    else if ((m = /^Player: (.+) \((.+)\)$/.exec(v))) {
+      for (let i = 0; i < N; i++) if (P.g[i] === st.lg && P.n[i] === m[1] && SCHOOLS[P.c[i]][0] === m[2]) { set({ p: i }); break; }
+    } else if (v.length > 1) {   // typed without picking: the first player, college or high school that contains it
+      const low = v.toLowerCase();
+      const c = SCHOOLS.findIndex((s, k) => M.byC.has(k) && s[0].toLowerCase() === low);
+      if (c >= 0) { set({ college: c, team: -1, hs: "", state: "", p: -1 }); return; }
+      for (let i = 0; i < N; i++) if (P.g[i] === st.lg && P.n[i].toLowerCase().includes(low)) { set({ p: i }); return; }
+    }
+    $("q").value = "";
+  });
+  function chips() {
+    const items = [];
+    if (st.team >= 0) items.push(["team", TEAMS[st.team][1]]);
+    if (st.college >= 0) items.push(["college", SCHOOLS[st.college][0]]);
+    if (st.hs) items.push(["hs", st.hs]);
+    if (st.state) items.push(["state", st.state]);
+    $("fchips").hidden = !items.length;
+    $("fchips").innerHTML = items.map(([k, v]) => `<button type="button" class="fchip" data-k="${k}" aria-label="Remove ${esc(v)}">${esc(v)} <span aria-hidden="true">×</span></button>`).join("");
+  }
+  $("fchips").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-k]"); if (!b) return;
+    const k = b.dataset.k; set({ [k]: k === "team" || k === "college" ? -1 : "", p: -1 });
+  });
+  $("share").addEventListener("click", async () => {
+    writeHash();
+    let ok = true;
+    try { await navigator.clipboard.writeText(location.href); } catch { ok = false; }
+    const t = $("toast"); t.textContent = ok ? "Link copied" : "Copy the address bar to share"; t.hidden = false;
+    setTimeout(() => { t.hidden = true; }, 1600);
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && st.p >= 0) set({ p: -1 }); });
+
+  // ---------- putting it together ----------
+  function set(change, newLeague) {
+    listed = change._list || null;
+    delete change._list;
+    Object.assign(st, change);
+    if (newLeague) fillToolbar(); else { $("team").value = st.team; $("from").value = st.from; $("to").value = st.to; }
+    refresh();
+  }
+  function refresh() {
+    compute(); chips(); renderSide(); writeHash(); draw();
+    document.title = `${viewTitle()} · Pro Pipeline`;
+  }
+  // the title bar's height, for the map's height
+  const bar = $("bar");
+  new ResizeObserver(() => document.documentElement.style.setProperty("--bar-h", bar.offsetHeight + "px")).observe(bar);
+  window.addEventListener("hashchange", () => { readHash(); fillToolbar(); refresh(); });
+
+  readHash();
+  fillToolbar();
+  compute();
+  new ResizeObserver(layout).observe(box);
+  refresh();
+  layout();
+  $("loading").remove();
+  // the outlines load in the background; the points draw without them
+  try {
+    const [world, us] = await Promise.all([
+      fetch("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json").then((r) => r.json()),
+      fetch("https://cdn.jsdelivr.net/npm/us-atlas@3.0.1/states-10m.json").then((r) => r.json()),
+    ]);
+    countries = topojson.feature(world, world.objects.countries).features.filter((f) => ["840", "124", "484", "192", "044"].includes(f.id));
+    states = topojson.feature(us, us.objects.states).features;
+    layout();
+  } catch { $("hint").textContent = "The outlines didn't load; the hometowns, colleges and teams still draw in the right places."; }
+})();
+</script>
+</body>
+</html>

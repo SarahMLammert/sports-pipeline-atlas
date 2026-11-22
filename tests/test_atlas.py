@@ -714,6 +714,49 @@ def test_pro_players_are_matched_by_name_last_name_or_hometown(tiny, monkeypatch
                    ("", "", ""), ("", "", ""), ("", "", "")]
 
 
+def test_past_nfl_seasons_come_from_nflverse_files():
+    import pro_rosters as pr
+    text = ("season,team,position,jersey_number,status,full_name,first_name,last_name,height,weight,college,gsis_id,"
+            "years_exp,entry_year,rookie_year\n"
+            "2023,NYJ,CB,1,ACT,Sauce Gardner,Ahmad,Gardner,75,190,Cincinnati,00-0037,1,2022,2022\n"
+            '2023,KC,QB,15,ACT,Patrick Mahomes,Patrick,Mahomes,74,225,Texas Tech,00-0033,6,2017,2017\n'
+            '2023,OAK,WR,80,CUT,Two Schools,Two,Schools,72,200,"Texas A&amp;M; Blinn",00-0040,2,,\n'
+            "2023,LV,K,2,ACT,No School,No,School,70,190,No College,00-0041,3,2020,2020\n")
+    sauce, pat, two, none = pr.parse_nflverse(text, 2023)
+    assert (sauce["team"], sauce["other_name"], sauce["college_until"], sauce["player_id"]) == ("New York Jets", "Ahmad Gardner", 2021, "00-0037")
+    assert (pat["other_name"], pat["college_until"]) == ("", 2016)
+    assert (two["team"], two["college"], two["college_until"]) == ("Oakland Raiders", "Texas A&M|Blinn", 2020)   # no entry year: 2023 - 2 - 1
+    assert none["college"] == ""
+    assert pr.seasons_arg("2017-2019") == [2017, 2018, 2019] and pr.seasons_arg("2026") == [2026]
+
+
+def test_pro_pipeline_page_data_has_one_row_per_player(tmp_path, monkeypatch):
+    import pro_rosters as pr
+    teams = tmp_path / "pro_teams.csv"
+    teams.write_text("league,team,name,city,state,lat,lon\nNFL,New York Jets,New York Jets,East Rutherford,NJ,40.8,-74.1\n"
+                     "NFL,Indianapolis Colts,Indianapolis Colts,Indianapolis,IN,39.8,-86.2\n")
+    monkeypatch.setattr(pr, "PRO_TEAMS", teams)
+    monkeypatch.setattr(pr, "_campuses", lambda: {"Cincinnati": ("Cincinnati", "OH", 39.13, -84.52)})
+    monkeypatch.setattr(pr, "_hometown_places", lambda sport: {("Detroit, Mich.", ""): (42.38, -83.1)})
+    base = {"league": "NFL", "position": "CB", "college_school": "Cincinnati", "college_level": "FBS", "matched": "yes",
+            "college_name": "Ahmad Gardner", "college_first": "2019", "hometown": "Detroit, Mich.", "home_state": "MI",
+            "home_country": "USA", "high_school": "Martin Luther King"}
+    pro = tmp_path / "pro"
+    pro.mkdir()
+    for season, team, name, status in [(2022, "New York Jets", "Ahmad Gardner", "ACT"), (2023, "New York Jets", "Ahmad Gardner", "ACT"),
+                                       (2024, "New York Jets", "Sauce Gardner", "ACT"), (2025, "Indianapolis Colts", "Sauce Gardner", "ACT"),
+                                       (2026, "New York Jets", "Sauce Gardner", "CUT")]:
+        pr.write_csv(pro / f"nfl_{season}_matched.csv", pr.MATCH_FIELDS,
+                     [{**base, "season": season, "team": team, "name": name, "status": status}])
+    data = pr.build_page_data(tmp_path / "pipeline.json", pro_dir=pro)
+    P = data["players"]
+    assert data["N"] == 1 and P["n"] == ["Sauce Gardner"]          # one person, named as in his latest season
+    assert P["t"] == [[[0, 2022, 2024], [1, 2025, 2025]]]          # the 2026 season he was cut is left out
+    assert (P["h"][0], P["s"][0], P["hs"][0], P["at"][0], P["m"][0]) == ("Detroit, Mich.", "MI", "Martin Luther King", (42.38, -83.1), 1)
+    assert data["leagues"] == [{"id": "NFL", "sport": "football", "seasons": [2022, 2023, 2024, 2025]}]
+    assert json.loads((tmp_path / "pipeline.json").read_text())["schools"] == [["Cincinnati", "Cincinnati", "OH", 39.13, -84.52]]
+
+
 def test_stand_in_general_roster_page_is_not_a_roster():
     assert sidearm.stand_in_page("<html><head><title>2019-20 General Roster - College of Idaho Athletics</title>")
     assert sidearm.stand_in_page("<title>2020-21 1-General Roster - Barry University Athletics</title>")

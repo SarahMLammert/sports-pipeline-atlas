@@ -13,3 +13,6 @@ playwright==1.64.0
 pytest==9.1.1
 # the linter (settings in ruff.toml); the tests run it too (test_code_is_clean):  python3 -m ruff check scripts tests
 ruff==0.16.9
+# past NBA seasons only (scripts/nba_history.py reads hoopR's parquet files); the Nov 22 files were made with these
+pandas==3.0.5
+pyarrow==26.0.1

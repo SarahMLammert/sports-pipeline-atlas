@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>College Sports Atlas</title>
+<title>Sports Pipeline Atlas</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -423,7 +423,7 @@
   const SPORTS = (window.SPORT_DISCS || []).map((s) => ({ ...s, teams: s.teams.map(TEAM) }));
   const SEX = { m: { word: "Men's", cls: 'men' }, w: { word: "Women's", cls: 'women' } };
 
-  const PAGE = { title: 'Sports<br><span>atlas</span>', hint: 'Hover a sport, or click it for all its maps.', doc: 'College Sports Atlas' };
+  const PAGE = { title: 'Sports<br>Pipeline<br><span>atlas</span>', hint: 'Hover a sport, or click it for all its maps.', doc: 'Sports Pipeline Atlas' };
 
   // ---- Icons (40×40 for sports, 24×24 for the page buttons) ----
   const SPORT_ICONS = {
@@ -548,8 +548,8 @@
 
   // The pro leagues, for the Pro maps: each disc opens the Pro Pipeline on that league.
   const LEAGUE_DISCS = [
-    { id: 'pro-nfl', lg: 'NFL', icon: 'football', sub: 'since 2017' }, { id: 'pro-nba', lg: 'NBA', icon: 'basketball', sub: 'this season' },
-    { id: 'pro-mlb', lg: 'MLB', icon: 'baseball', sub: 'this season' }, { id: 'pro-nhl', lg: 'NHL', icon: 'hockey', sub: 'this season' }];
+    { id: 'pro-nfl', lg: 'NFL', icon: 'football', sub: 'since 2016' }, { id: 'pro-nba', lg: 'NBA', icon: 'basketball', sub: 'since 2016' },
+    { id: 'pro-mlb', lg: 'MLB', icon: 'baseball', sub: 'since 2016' }, { id: 'pro-nhl', lg: 'NHL', icon: 'hockey', sub: 'since 2016' }];
   LEAGUE_DISCS.forEach((L) => {
     ring.insertAdjacentHTML('beforeend', `<a class="disc live" data-id="${L.id}" href="pro-pipeline.html#lg=${L.lg}" aria-label="${L.lg}: high school to college to the pros">${sportSvg(L.icon, 44)}</a>`
       + `<div class="label live" data-id="${L.id}" aria-hidden="true"><span class="n cond">${L.lg}</span><span class="s">${L.sub}</span></div>`);
@@ -1069,20 +1069,37 @@
     const n = parseInt(hex.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(k > 0 ? v + (255 - v) * k : v * (1 + k)));
     return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
   };
+  // How calm the paint is: each color keeps SAT of its saturation and is moved LIFT of the way toward light, so the
+  // palettes above stay recognisable but don't glare (Nov 22: the full colors were too bright behind the ring).
+  const MUTE = { sat: 0.5, lift: 0.3 };
+  const muteCache = new Map();
+  function mute(hex) {
+    if (muteCache.has(hex)) return muteCache.get(hex);
+    const n = parseInt(hex.slice(1), 16), r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    let hue = 0, l = (mx + mn) / 2, sat = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
+    if (d) hue = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    sat *= MUTE.sat; l += (0.9 - l) * MUTE.lift;
+    const c = (1 - Math.abs(2 * l - 1)) * sat, x = c * (1 - Math.abs((hue % 2 + 2) % 2 - 1)), m = l - c / 2;
+    const [rr, gg, bb] = [[c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x]][((Math.floor(hue) % 6) + 6) % 6];
+    const out = '#' + [rr, gg, bb].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+    muteCache.set(hex, out);
+    return out;
+  }
   function paintCanvas(cv, kind, w, h, cx, cy) {
     const P = PAINT[kind], rnd = seeded(P.seed), nb = P.bands.length;
     cv.width = w; cv.height = h;
     const g = cv.getContext('2d');
     const far = Math.max(Math.hypot(cx, cy), Math.hypot(w - cx, cy), Math.hypot(cx, h - cy), Math.hypot(w - cx, h - cy));
     const under = g.createRadialGradient(cx, cy, 0, cx, cy, far);      // the wash under the strokes
-    P.bands.forEach((band, i) => under.addColorStop(i / (nb - 1), band[0]));
+    P.bands.forEach((band, i) => under.addColorStop(i / (nb - 1), mute(band[0])));
     g.fillStyle = under; g.fillRect(0, 0, w, h);
     g.lineCap = 'round';
     const n = Math.round(w * h / 120);
     for (let i = 0; i < n; i++) {
       const x = rnd() * w, y = rnd() * h, dx = x - cx, dy = y - cy, dist = Math.hypot(dx, dy);
       const t = Math.min(0.999, Math.max(0, (dist / far) ** 0.8 + (rnd() - 0.5) * 0.16));
-      const band = P.bands[Math.floor(t * nb)], color = band[Math.floor(rnd() * band.length)];
+      const band = P.bands[Math.floor(t * nb)], color = mute(band[Math.floor(rnd() * band.length)]);
       const ang = Math.atan2(dy, dx) + 0.45 * Math.sin(dist / 85 + Math.atan2(dy, dx) * 3) + (rnd() - 0.5) * 0.7;
       const len = 16 + rnd() * 36 * (0.55 + t), wid = 5 + rnd() * 11 * (0.55 + t), bend = (rnd() - 0.5) * len * 0.7;
       const ux = Math.cos(ang), uy = Math.sin(ang), px = -uy, py = ux;
@@ -1091,9 +1108,9 @@
         g.globalAlpha = alpha; g.strokeStyle = style; g.lineWidth = width;
         g.beginPath(); g.moveTo(ax + px * off, ay + py * off); g.quadraticCurveTo(qx + px * off, qy + py * off, bx + px * off, by + py * off); g.stroke();
       };
-      line(wid * 0.3, wid * 0.9, shade(color, -0.22), 0.35);      // the stroke's shadow side
+      line(wid * 0.3, wid * 0.9, shade(color, -0.16), 0.3);      // the stroke's shadow side
       line(0, wid, color, 0.95);                                  // the paint
-      line(-wid * 0.28, wid * 0.28, shade(color, 0.45), 0.55);   // the light catching its ridge
+      line(-wid * 0.28, wid * 0.28, shade(color, 0.45), 0.4);   // the light catching its ridge
     }
     g.globalAlpha = 1;
   }

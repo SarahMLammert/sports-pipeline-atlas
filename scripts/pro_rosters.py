@@ -24,10 +24,15 @@ Writes, in rosters/pro/:
                                  roster), "likely" (last name and first names that fit), "hometown" (same name
                                  at another school, born in the town that roster gives as his hometown).
 
-A league's site lists the current players only, so each run there is a snapshot of one season. Past NFL
-seasons come from nflverse's roster files instead (one file a season, everyone on a roster at the season's end):
+Past seasons (the college rosters start in 2016, so 2016 on is worth reading):
+  nfl   nflverse's roster files (one a season, everyone on a roster at the season's end); nfl.com shows only today's
+  mlb   the stats API's full-season roster of each team (everyone on it at any time that season)
+  nhl   the NHL's API, each team's roster for that season (Arizona before Utah; no Vegas before 2017, Seattle before 2021)
+  nba   scripts/nba_history.py (hoopR's open ESPN data) writes the files, then:  pro_rosters.py nba --season 2016-2025 --match-only
 
-    python3 scripts/pro_rosters.py nfl --season 2017-2026   # 2017-2025 from nflverse, 2026 from nfl.com
+    python3 scripts/pro_rosters.py nfl --season 2016-2026        # 2016-2025 from nflverse, 2026 from nfl.com
+    python3 scripts/pro_rosters.py mlb --season 2016-2027        # MLB's 2027 is this winter's 40-man rosters
+    python3 scripts/pro_rosters.py nhl --season 2016-2026        # 2026 = 2026-27
 
 Then the Pro Pipeline page's data, from every <league>_<season>_matched.csv:
 
@@ -59,13 +64,13 @@ PRO_TEAMS = CONFIG / "shared" / "pro_teams.csv"     # each pro team's city and w
 
 # Past NFL seasons: nflverse's roster file for a season (on GitHub), and its team codes
 NFLVERSE_URL = "https://github.com/nflverse/nflverse-data/releases/download/rosters/roster_{season}.csv"
-NFL_FIRST_SEASON = 2017       # the first NFL season whose rookies can be on the college rosters (2016 on)
+FIRST_SEASON = 2016           # the first season worth reading: the college rosters start in 2016
 NFL_CODES = {
     "ARI": "Arizona Cardinals", "ATL": "Atlanta Falcons", "BAL": "Baltimore Ravens", "BUF": "Buffalo Bills",
     "CAR": "Carolina Panthers", "CHI": "Chicago Bears", "CIN": "Cincinnati Bengals", "CLE": "Cleveland Browns",
     "DAL": "Dallas Cowboys", "DEN": "Denver Broncos", "DET": "Detroit Lions", "GB": "Green Bay Packers",
     "HOU": "Houston Texans", "IND": "Indianapolis Colts", "JAX": "Jacksonville Jaguars", "KC": "Kansas City Chiefs",
-    "LA": "Los Angeles Rams", "LAC": "Los Angeles Chargers", "LV": "Las Vegas Raiders", "OAK": "Oakland Raiders",
+    "LA": "Los Angeles Rams", "LAC": "Los Angeles Chargers", "SD": "San Diego Chargers", "LV": "Las Vegas Raiders", "OAK": "Oakland Raiders",
     "MIA": "Miami Dolphins", "MIN": "Minnesota Vikings", "NE": "New England Patriots", "NO": "New Orleans Saints",
     "NYG": "New York Giants", "NYJ": "New York Jets", "PHI": "Philadelphia Eagles", "PIT": "Pittsburgh Steelers",
     "SEA": "Seattle Seahawks", "SF": "San Francisco 49ers", "TB": "Tampa Bay Buccaneers", "TEN": "Tennessee Titans",
@@ -136,8 +141,11 @@ LEAGUES = {
                          "Centenary College of Louisiana": "Centenary", "Sacramento CC": "Sacramento City College",
                          "State College of Florida": "State College of Florida, Manatee-Sarasota",
                          "Caldwell Tech CC": "Caldwell CC"},
-            "url": "https://statsapi.mlb.com/api/v1/teams/{team}/roster?rosterType=40Man&hydrate=person(education)"},
+            "url": "https://statsapi.mlb.com/api/v1/teams/{team}/roster?rosterType=40Man&hydrate=person(education)",
+            # a past season: everyone who was on the team at any time that season
+            "past_url": "https://statsapi.mlb.com/api/v1/teams/{team}/roster?rosterType=fullSeason&season={season}&hydrate=person(education)"},
     "nhl": {"teams": list(NHL_TEAMS), "url": "https://api-web.nhle.com/v1/roster/{team}/current",
+            "past_url": "https://api-web.nhle.com/v1/roster/{team}/{season}{next}",     # 2018 = 2018-19: 20182019
             "player_url": "https://api-web.nhle.com/v1/player/{id}/landing", "college_sport": "hockey-mens",
             "new_season_month": 7, "colleges": {"Miami U.": "Miami (OH)"}},
 }
@@ -356,15 +364,29 @@ def nflverse(season: int, refresh: bool) -> list[dict]:
     return rows
 
 
+# NHL teams by season: Vegas from 2017-18, Seattle from 2021-22, and Utah (2024-25 on) was Arizona before
+NHL_PAST = {"ARI": "Arizona Coyotes"}
+
+
+def teams_for(league: str, season: int) -> list:
+    if league != "nhl":
+        return list(LEAGUES[league]["teams"])
+    out = [t for t in NHL_TEAMS if not (t == "VGK" and season < 2017) and not (t == "SEA" and season < 2021)
+           and not (t == "UTA" and season < 2024)]
+    return out + (["ARI"] if season < 2024 else [])
+
+
 def scrape(league: str, season: int, refresh: bool) -> list[dict]:
     conf = LEAGUES[league]
+    past = season < season_now(league=league) and "past_url" in conf
     fetcher = Fetcher(cache_dir=CACHE, refresh=refresh, delay=2.0)
     careers = Fetcher(cache_dir=CACHE, refresh=False, delay=1.0)     # an NHL player's past seasons don't change
     rows, problems = [], []
-    for team in conf["teams"]:
-        url = conf["url"].format(team=team, slug=NBA_TEAMS.get(team, ""))
+    for team in teams_for(league, season):
+        url = (conf["past_url"] if past else conf["url"]).format(team=team, slug=NBA_TEAMS.get(team, ""), season=season,
+                                                                 next=season + 1)
         label = {"nba": f"{NBA_TEAMS.get(team, '')}".title(), "mlb": MLB_TEAMS.get(team, ""),
-                 "nhl": NHL_TEAMS.get(team, "")}.get(league) or string.capwords(str(team).replace("-", " "))
+                 "nhl": NHL_TEAMS.get(team) or NHL_PAST.get(team, "")}.get(league) or string.capwords(str(team).replace("-", " "))
         try:
             status, _, text = fetcher.get(url, remember_miss=False)
         except Exception as exc:  # network trouble: say which team, keep going
@@ -400,9 +422,57 @@ def scrape(league: str, season: int, refresh: bool) -> list[dict]:
             rows.append({"league": league.upper(), "season": season, "team": label,
                          **{f: p.get(f, "") for f in ROSTER_FIELDS if f not in ("league", "season", "team")}})
         print(f"  {label:24} {len(players):3} players")
+    if league == "nhl" and past:
+        rows += nhl_from_careers(season, rows, careers)
     for p in problems:
         print("  problem:", p)
     return rows
+
+
+# The NHL's past-season rosters can be short (about 20 a team from 2023-24 on, where earlier seasons list everyone who
+# played) or empty (Arizona 2023-24). Each player's career says which NHL teams he played for each season, so the
+# players already known from any NHL roster file fill those gaps: whoever played for a team that season is added.
+NHL_CAREER_TEAMS = {"Utah Hockey Club": "Utah Mammoth", "Montréal Canadiens": "Montreal Canadiens"}
+
+
+def nhl_from_careers(season: int, rows: list[dict], careers: Fetcher) -> list[dict]:
+    have = {(r["team"], r.get("profile_url")) for r in rows}
+    ids = set()
+    for path in PRO_DIR.glob("nhl_*.csv"):
+        if not path.name.endswith("_matched.csv"):
+            ids |= {r["profile_url"].rsplit("/", 1)[-1] for r in read_csv(path) if r.get("profile_url")}
+    ids |= {r["profile_url"].rsplit("/", 1)[-1] for r in rows if r.get("profile_url")}
+    teams = set(NHL_TEAMS.values()) | set(NHL_PAST.values())
+    want, added = f"{season}{season + 1}", Counter()
+    out = []
+    for pid in sorted(i for i in ids if i.isdigit()):
+        try:
+            st, _, text = careers.get(LEAGUES["nhl"]["player_url"].format(id=pid), remember_miss=False)
+            data = json.loads(text) if st == 200 else {}
+        except Exception:  # not saved and no network: skip him
+            continue
+        played = {NHL_CAREER_TEAMS.get(_default(s.get("teamName")), _default(s.get("teamName")))
+                  for s in data.get("seasonTotals", [])
+                  if str(s.get("season")) == want and s.get("gameTypeId") == 2 and s.get("leagueAbbrev") == "NHL"}
+        url = f"https://www.nhl.com/player/{pid}"
+        college, until, first_nhl = nhl_college(text)
+        inches = _int(data.get("heightInInches"))
+        for team in played & teams:
+            if (team, url) in have:
+                continue
+            added[team] += 1
+            out.append({"league": "NHL", "season": season, "team": team,
+                        "name": f"{_default(data.get('firstName'))} {_default(data.get('lastName'))}".strip(),
+                        "number": clean(data.get("sweaterNumber")), "position": clean(data.get("position")), "status": "",
+                        "height": f"{inches // 12}-{inches % 12}" if inches else "", "weight": clean(data.get("weightInPounds")),
+                        "experience": season - first_nhl if first_nhl else "", "college": college,
+                        "college_until": until or "", "birth_city": _default(data.get("birthCity")),
+                        "birth_state": _default(data.get("birthStateProvince")), "birth_country": clean(data.get("birthCountry")),
+                        "pro_high_school": "", "profile_url": url, "player_id": pid, "other_name": ""})
+    if out:
+        print(f"  + {len(out)} more players from their careers ({len(added)} teams; most: "
+              f"{', '.join(f'{t} {n}' for t, n in added.most_common(3))})")
+    return out
 
 
 # ---- matching to the college rosters ---------------------------------------------------------------------------
@@ -558,12 +628,12 @@ def run(league: str, season: int | None, refresh: bool, match_only: bool) -> int
             return 1
         write_csv(roster_path, ROSTER_FIELDS, rows)
         print(f"-> {roster_path}")
-    elif league != "nfl" and season != season_now(league=league):
-        print(f"{league.upper()} {season}: only this season's rosters ({season_now(league=league)}) can be read; "
-              "past seasons exist for the NFL only.")
+    elif season > season_now(league=league) or (season < season_now(league=league) and "past_url" not in LEAGUES[league]):
+        print(f"{league.upper()} {season}: only this season's rosters ({season_now(league=league)}) can be read here; "
+              "past NBA seasons come from scripts/nba_history.py, then --match-only.")
         return 1
     else:
-        print(f"{league.upper()} {season}: reading {len(LEAGUES[league]['teams'])} rosters")
+        print(f"{league.upper()} {season}: reading {len(teams_for(league, season))} rosters")
         rows = scrape(league, season, refresh)
         if not rows:
             print("No players read; nothing saved.")
@@ -671,7 +741,7 @@ def build_page_data(out_path=PAGE_DATA, pro_dir=None) -> dict:
                 team_ix[tkey] = len(teams)
                 lat, lon = t.get("lat"), t.get("lon")
                 teams.append([lg, t.get("name") or r["team"], t.get("city", ""), t.get("state", ""),
-                              float(lat) if lat else None, float(lon) if lon else None])
+                              float(lat) if lat else None, float(lon) if lon else None, t.get("color", ""), t.get("color2", "")])
             school = r["college_school"]
             if school not in school_ix:
                 school_ix[school] = len(schools)

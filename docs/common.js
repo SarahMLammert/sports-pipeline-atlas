@@ -688,14 +688,26 @@
       m.statePaths = stateFeatures.map((f) => new Path2D(path(f) || ""));
       m.xy = campus.map((c) => c ? albers([c.lon, c.lat]) : null);
       draw();
+      // the physical relief for this size, drawn in the background (basemap.js); the newest one wins
+      if (window.Basemap) {
+        const ticket = (m.reliefTicket = (m.reliefTicket || 0) + 1);
+        clearTimeout(m.reliefTimer);
+        m.reliefTimer = setTimeout(() => window.Basemap.render(albers, r.width, r.height)
+          .then((c) => { if (ticket === m.reliefTicket) { m.relief = c; draw(); } }).catch(() => {}), 80);
+        window.Basemap.rivers().then((list) => { if (ticket === m.reliefTicket) { m.rivers = window.Basemap.riverPaths(list, albers); draw(); } }).catch(() => {});
+      }
     };
     // a cleared canvas with the states on it; false before the map has a size
     m.clear = () => {
       const { w, h, dpr } = m.size;
       if (!w) return false;
       g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
-      g.fillStyle = css("--land"); for (const p of m.statePaths) g.fill(p);
-      g.strokeStyle = css("--border"); g.lineWidth = .7; for (const p of m.statePaths) g.stroke(p);
+      if (m.relief) {                          // the physical map, softened a little so the lines and dots stand out
+        g.drawImage(m.relief, 0, 0, w, h);
+        g.fillStyle = "rgba(255, 255, 255, 0.28)"; for (const p of m.statePaths) g.fill(p);
+        if (m.rivers) window.Basemap.strokeRivers(g, m.rivers, 1, 7);
+      } else { g.fillStyle = css("--land"); for (const p of m.statePaths) g.fill(p); }
+      g.strokeStyle = m.relief ? "rgba(40, 44, 52, 0.55)" : css("--border"); g.lineWidth = .7; for (const p of m.statePaths) g.stroke(p);
       return true;
     };
     m.stroke = (q) => { g.beginPath(); g.moveTo(q.a[0], q.a[1]); g.quadraticCurveTo(q.c[0], q.c[1], q.b[0], q.b[1]); g.stroke(); };

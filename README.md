@@ -1,6 +1,7 @@
-# college-sports-atlas
+# Sports Pipeline Atlas
 
-The College Sports Atlas: where college players come from and where coaches move, sport by sport. Rosters and staff lists are scraped
+Where players come from, from high school to college to the pros, and where coaches move, sport by sport. (Called the
+College Sports Atlas until Nov 22, 2026; the repository and the site's address are still `college-sports-atlas`.) Rosters and staff lists are scraped
 from each school's athletics site, hometowns are placed on a map, and everything is published as a static
 site in `docs/` (GitHub Pages).
 
@@ -33,10 +34,15 @@ site in `docs/` (GitHub Pages).
 | Cross Country (Men's) | `cross-country-mens` | 1,138 | 75K | 2016–2026 (fall) |
 | Cross Country (Women's) | `cross-country-womens` | 1,188 | 75K | 2016–2026 (fall) |
 | Track & Field (Men's) | `track-mens` | 959 (indoor and outdoor together) | 150K | 2016–2026 |
+| Track & Field (Women's) | `track-womens` | 1,035 (indoor and outdoor together) | 141K | 2016–2026 |
+| Swimming & Diving (Men's) | `swimming-mens` | 471 | 43K | 2016–2027 |
+| Swimming & Diving (Women's) | `swimming-womens` | 571 | 55K | 2016–2027 |
 
-Schools are the ones with players in the data. Set up but not built yet (they show as "coming soon" on the front
-page until built): Track & Field (Women's) `track-womens` (1,206 programs to try), Swimming & Diving `swimming-mens`,
-`swimming-womens` (668, 770).
+Schools are the ones with players in the data. All 30 sports are built; a sport that is set up but not built yet
+shows as "coming soon" on the front page.
+
+The pros (NFL, NBA, MLB, NHL, 2016 on) are traced back to these college rosters on the Pro Pipeline page: about
+12,000 players with a known college, 7,300 of them with a hometown (Nov 22). See "Pro rosters" below.
 
 Football, volleyball and soccer are named by the fall they're played in. Spring and winter sports are named by the
 spring the season ends in (2025-26 = 2026); from August the current season is next spring's. A sport appears on the
@@ -61,7 +67,9 @@ latitude-longitude grid of a much bigger globe centred on the real one (`body[da
 pages for every sport, opened with the sport in the address (`players-dotmap.html?sport=softball`):
 
 - **Recruiting Map** (`players-dotmap.html`): a dot for every hometown, worldwide; filters for school,
-  conference, division, seasons, transfers and positions; search for a school, player or town.
+  conference, division, seasons, transfers and positions; search for a school, player or town. Night lights (the moon
+  button, on by default and remembered in the browser) darken the map and make each hometown glow in its school's
+  color; crowded places add up like city lights.
 - **Recruiting Footprints** (`players-heatmap.html`): up to four schools compared, state by state.
 - **Transfer Map** (`players-transfers.html`): school-to-school moves.
 - **Coaching Moves** (`staff-moves.html`): coaches moving between schools (head coach jobs, coaching jobs or any staff job).
@@ -71,9 +79,17 @@ pages for every sport, opened with the sport in the address (`players-dotmap.htm
   there was that season, each person's career, and how the school ranks. Built in the browser from the player and
   staff data, so it needs no build step of its own.
 
-One page covers every league: **Pro Pipeline** (`pro-pipeline.html`, linked from the globe): NFL, NBA, MLB and NHL
-players traced back to their college and high school, with a league picker, a team picker, NFL seasons, and one
-player's path (hometown → college → teams). Its data is `docs/pro/pipeline.json` (`pro_rosters.py --build`).
+The maps sit on a physical relief (`docs/basemap.js`): NASA's Blue Marble shaded relief and bathymetry, as web-map
+tiles from FreeTiler (`cdn.jsdelivr.net/gh/freetiler/nasa-bluemarble`, zoom 0-8), recoloured in the browser like a
+physical atlas. Rivers are drawn on top from `docs/rivers.json` (Natural Earth's 1:10m rivers and lake
+centerlines, public domain, scalerank 0-8, simplified to 0.01°; smaller rivers appear as the Recruiting Map zooms in). The Recruiting Map draws the tiles as it zooms; the fixed maps (Transfer Map, Coaching Moves, School
+Influence, Pro Pipeline) reproject them once per size. Footprints keeps its plain states, since it colours them by
+numbers. If the tiles can't load, the maps keep their plain land.
+
+One page covers every league: **Pro Pipeline** (`pro-pipeline.html`, linked from the globe and from the front page's
+pro maps): NFL, NBA, MLB and NHL players since 2016 traced back to their college and high school, with a league
+picker, a team picker, a season range, a search, and one player's path (hometown → college → teams). Teams are drawn
+in their official colors (`config/shared/pro_teams.csv`). Its data is `docs/pro/pipeline.json` (`pro_rosters.py --build`).
 
 The look: a modern, bright atlas. Colors are CSS variables at the top of `docs/common.css` (the map pages, with a
 dark mode) and of `docs/index.html` (the deep-blue globe); headings use Plus Jakarta Sans, text Barlow.
@@ -109,7 +125,8 @@ an SVG. A new page needs the same three `<link>` lines under its title.
 
 Setup once: `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`
 (and `npm install` for the site's linter; it needs Node.js, `brew install node`)
-(add `pip install playwright && playwright install chromium` for the browser retries).
+(then `python3 -m playwright install chromium` once, for the browser retries and the page test).
+requirements.txt includes pandas and pyarrow, which only `scripts/nba_history.py` (past NBA seasons) uses.
 
 ```
 caffeinate -i python3 scripts/pipeline.py all              # every sport, every step
@@ -147,14 +164,17 @@ The steps one by one:
 ## Folders
 
 ```
-config/shared/         school_colors.csv, school_locations.csv, hometown_corrections.csv (every sport)
+config/shared/         school_colors.csv, school_locations.csv, hometown_corrections.csv (every sport),
+                       pro_teams.csv (each pro team's city, place on the map and two official colors)
 config/<sport>/        settings.json        roster paths, roster size, positions, divisions, seasons
                        schools.csv          every college: division, conference, site, seasons, notes
                        hometown_corrections.csv   only where this sport needs a different fix from the shared one
                        wrong_seasons.csv, season_pages.csv   pages to skip or to use (optional)
 rosters/<sport>/       working files, not committed: rosters_<season>.csv, scrape reports, MISSING_ROSTERS.md,
                        attempts.csv, hometowns.csv, staff_<season>.csv, notes and logs, and rosters.db (below)
-docs/                  the site: the six pages, common.js, common.css, index.html, and sports.js (written by
+docs/                  the site: index.html (the globe), the six map pages, pro-pipeline.html, sources.html,
+                       common.js, common.css, basemap.js (the physical relief) and rivers.json, img/earth.jpg (the
+                       globe's picture), pro/pipeline.json (the Pro Pipeline's data), and sports.js (written by
                        build.py pages from the settings);
                        docs/<sport>/ has map_data.json, names.txt, summary.json, school_locations.json,
                        staff_data.json and the old addresses' forwarding pages
@@ -162,7 +182,9 @@ scripts/               new_sports.py (the settings and schools files of the spor
                        downloads, season files, levels, and run_command: each file's sub-commands), sidearm.py (reading roster pages),
                        hometowns.py (reading hometown, class, height and weight fields), scrape_rosters.py,
                        scrape_reports.py (attempts.csv, the problem list, MISSING_ROSTERS.md), geocode.py (placing
-                       hometowns), hometown_fixes.py, build.py, staff.py, pipeline.py, pro_rosters.py (below)
+                       hometowns), hometown_fixes.py, build.py, staff.py, pipeline.py, pro_rosters.py and
+                       nba_history.py (below)
+rosters/pro/           the pro rosters, not committed: <league>_<season>.csv and <league>_<season>_matched.csv
 tests/                 test_atlas.py: the code (also checked with the linter, ruff), the parsers, the builds
                        roster_pages.zip + roster_pages_expected.json: nine real roster pages, one per kind of
                        site, and what the parser reads from each
@@ -223,13 +245,33 @@ tests/                 test_atlas.py: the code (also checked with the linter, ru
   move is a person's last season at one school followed by their first at another within two seasons.
   Titles become roles (head, associate, assistant, coordinator, graduate, volunteer, support).
 
-- **Pro rosters (started Nov 8).** `python3 scripts/pro_rosters.py nfl` reads the 32 NFL team rosters from nfl.com
-  (cached like the college pages; `--refresh` downloads again, `--match-only` redoes the matching) and writes
-  `rosters/pro/nfl_<season>.csv` and `nfl_<season>_matched.csv`: each player with his college matched to that school's
-  football roster, so hometown and high school come from the college data (about 93% matched). A roster page lists
-  current players only, so each run is a snapshot of one season; past NFL seasons come from nflverse's roster files
-  (`python3 scripts/pro_rosters.py nfl --season 2017-2026`). `python3 scripts/pro_rosters.py --build` then writes the
-  Pro Pipeline page's data from every `*_matched.csv`. Pro teams' places are in `config/shared/pro_teams.csv`.
+- **Pro rosters.** `scripts/pro_rosters.py` reads each league's rosters with every player's college, then finds him on
+  that college's roster here (`matched` = by name, by last name and fitting first names, or by name and birthplace),
+  so his hometown and high school come from the college data. It writes `rosters/pro/<league>_<season>.csv` and
+  `<league>_<season>_matched.csv`; `--build` turns every matched file into the Pro Pipeline's data. Seasons are named by
+  the year they start (NBA and NHL 2026 = 2026-27; MLB's 2027 is this winter's 40-man rosters).
+
+  | league | this season | past seasons |
+  |---|---|---|
+  | NFL | nfl.com team pages | nflverse's roster files (GitHub) |
+  | NBA | nba.com team pages | `scripts/nba_history.py`: hoopR's open ESPN data (GitHub; pandas and pyarrow) |
+  | MLB | MLB's stats API, 40-man rosters with education | the stats API's full-season rosters |
+  | NHL | the NHL's API, plus each player's career for his NCAA seasons | the NHL's API, each team's season roster, filled out from players' careers (those files are short from 2023-24 on and empty for Arizona 2023-24) |
+
+  ```
+  python3 scripts/pro_rosters.py all --refresh --build            # today's rosters, every league
+  python3 scripts/pro_rosters.py nfl --season 2016-2026 --build
+  python3 scripts/pro_rosters.py mlb --season 2016-2027 --build   # about 15 minutes
+  python3 scripts/pro_rosters.py nhl --season 2016-2026 --build   # about 30-40 minutes (each player's career once)
+  python3 scripts/nba_history.py                                  # past NBA seasons -> rosters/pro/nba_<season>.csv
+  python3 scripts/pro_rosters.py nba --season 2016-2025 --match-only --build
+  python3 scripts/pro_rosters.py --build                          # only rebuild the page's data
+  ```
+
+  `--match-only` redoes the matching from the saved roster files (after the college rosters change). The college
+  rosters start in 2016, so players who were in college before that have a college but no hometown. A college needs a
+  row in `config/shared/school_locations.csv` to get a square on the map; `--build` counts any without one. Left out: the
+  WNBA (its site refuses automated visitors) and MLS (its club pages give no college).
 
 ## Adding a sport
 

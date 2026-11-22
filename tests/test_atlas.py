@@ -737,6 +737,28 @@ def test_clean_name_strips_numbers_and_captain_marks():
         assert clean_name(keep) == keep, keep
 
 
+def test_clean_name_strips_more_marks():
+    from scrape_rosters import clean_name
+    for raw in ("RS11 Mason Thomas", "RS/12 Mason Thomas", "RS-2 Mason Thomas", "RS - 10 Mason Thomas",
+                "RS/RS Mason Thomas", "24/4/4 Mason Thomas", "9/(a) Mason Thomas", "/85 Mason Thomas",
+                "/ 3 Mason Thomas", "55/- Mason Thomas", "0 1 Mason Thomas", "(15) Mason Thomas", "I/O Mason Thomas",
+                "D10 Mason Thomas", "JV01 Mason Thomas", "Mason Thomas (#5)", "Mason Thomas (#9 def)",
+                "Mason Thomas |||", "Mason Thomas_", "`Mason Thomas"):
+        assert clean_name(raw) == "Mason Thomas", raw
+    assert clean_name("N/A Thomas") == "Thomas"
+    assert clean_name("C&eacute;sar Bourgois") == "César Bourgois"
+    for keep in ("K2 Dickens", "Malia Ka`akimaka-Moisa", "Metuisela `Unga", "Khalil Rivers '18", "R.J. Williams"):
+        assert clean_name(keep) == keep, keep
+
+
+def test_rows_without_a_name_or_for_a_manager_are_not_players():
+    from sidearm import not_a_player
+    for name in ("4", ". .", "Roster Archives", "Mgr Bruce Kriegel", "MGR Eric Gomez"):
+        assert not_a_player({"name": name}), name
+    for name in ("Mason Thomas", "Megan Grant", "K2 Dickens"):
+        assert not not_a_player({"name": name}), name
+
+
 def test_clean_name_strips_redshirt_marks():
     from scrape_rosters import clean_name
     for raw in ("RS Mason Thomas", "rs Mason Thomas", "Rs Mason Thomas", "RS. Mason Thomas", "R Mason Thomas",

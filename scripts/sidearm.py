@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import json
 import re
 from dataclasses import dataclass, field as dc_field
@@ -428,7 +429,7 @@ _NOT_PLAYER_POSITION = re.compile(r"\b(ball|bat)\s*(boy|girl)\b|videograph", re.
 _NOT_PLAYER_NAME = re.compile(
     r"^(in (loving )?memory of|retired (in honor of|number|jersey)|in honor of)\b|memorial jersey|"
     r"^(team |student |marketing )?manager\b|[-–,(/]\s*(team |student )?manager\)?\s*$|"
-    r"\bstudent assistant\b",
+    r"\bstudent assistant\b|^roster archives?\b|^mgr\b",
     re.I,
 )
 
@@ -444,6 +445,8 @@ def not_a_player(rec: dict) -> str:
         return "team helper"
     if _NOT_PLAYER_NAME.search(rec.get("name", "") or "") or (rec.get("hometown", "") or "").strip().lower() == "retired number":
         return "not a person on the team"
+    if (rec.get("name") or "").strip() and not re.search(r"[^\W\d_]", rec["name"]):   # "4": a number, no name
+        return "no name"
     return ""
 
 
@@ -1262,6 +1265,17 @@ _CAPTAIN = re.compile(r"\(\s*c\s*\)|©|\(\s*captain\s*\)|\s+-\s*captain\b|\*+", 
 # or after it ("Barry Stewart (RS)", "Morgan Dennis (R)", "Cole Chudy - RS")
 _LEADING_REDSHIRT = re.compile(r"^(?:(?i:rs|r-s|r/s|r\.s\.|mrs|redshirt|medical redshirt)[.:\-]?|R|MR)\s+")  # "R. Kelly" is an initial
 _TRAILING_REDSHIRT = re.compile(r"\s*(?:\((?i:rs|r|mrs|redshirt)\)|\s-\s*RS)$")
+# More marks in front of a name, Nov 18. Never part of a name: a token starting with a digit or "/" ("24/4/4",
+# "9/(a)", "23/42creme", "/85", "/ 3"), a bracketed number ("(15)"), a redshirt mark with a number ("RS/12",
+# "RS-2", "RS - 10", "RS/RS", "R5/RS"), Clayton State's indoor/outdoor "I/O", "N/A" for a missing first name
+# and a stray backtick.
+_LEADING_MARK = re.compile(r"^(?:/\s*(?=\d)|[(/]?#?\d\S*\s+|\(\s*#?\d+\s*\)\s*|R(?:S|\d{1,3})?\s*[-/]\s*(?:\d{1,3}|RS)\s+"
+                           r"|I/O\s+|N/A\s+|`(?=\w))")
+# A letter-and-number code ("RS11", "D10", "JV01", "R10", "A23"); only taken off when a full name follows,
+# so a nickname stays ("K2 Dickens", "J3 Swindell").
+_LEADING_CODE = re.compile(r"^[A-Z]{1,2}\d{1,3}[A-Z]?\s+")
+# ...and after it: "(#5)", "(17)", "(#9 def)", "|||", a stray "_" or "`"
+_TRAILING_MARK = re.compile(r"\s*\(#?\s*\d{1,3}(?:\s+[a-z]+)?\)$|\s*\|+$|(?<=\w)[_`]+$", re.I)
 
 
 def clean_name(name: str) -> str:
@@ -1270,9 +1284,11 @@ def clean_name(name: str) -> str:
     '13d Drew Melaragno', '16/33 Drew Melaragno', '12/DB Drew Melaragno', '1-O Drew Melaragno' -> 'Drew Melaragno'
     'C Mason Thomas', 'C 89 Mason Thomas', 'Mason Thomas (C)', 'Mason Thomas*' -> 'Mason Thomas'
     'RS Mason Thomas', 'R Mason Thomas', 'MR Mason Thomas', 'Mason Thomas (RS)', 'Mason Thomas - RS' -> 'Mason Thomas'
+    'RS11 Mason Thomas', 'RS/12 Mason Thomas', 'RS - 10 Mason Thomas', '24/4/4 Mason Thomas', '/85 Mason Thomas',
+    'I/O Mason Thomas', 'Mason Thomas (#5)', 'Mason Thomas_' -> 'Mason Thomas'; 'N/A Thomas' -> 'Thomas'
     'Dami Adekunjo Dami Adekunjo' -> 'Dami Adekunjo'
     A real initial is kept: 'C.J. Stroud', 'CJ Stroud' and 'C J Stroud' are left alone."""
-    n = clean(_CAPTAIN.sub(" ", name or ""))
+    n = clean(_CAPTAIN.sub(" ", html.unescape(name or "")))      # "AKVIL&#278;" -> "AKVILĖ"
     for _ in range(3):  # markers can be stacked: "C #89 Mason Thomas"
         before = n
         n = _LEADING_JERSEY.sub("", n)                            # leading jersey number
@@ -1286,6 +1302,13 @@ def clean_name(name: str) -> str:
         if rest != n and len(rest.split()) >= 2 and len(rest.split()[0].strip(".")) > 1:
             n = rest
         n = _TRAILING_REDSHIRT.sub("", n)
+        rest = _LEADING_MARK.sub("", n)
+        if re.search(r"[^\W\d_]", rest):                          # never strip a name down to nothing
+            n = rest
+        rest = _LEADING_CODE.sub("", n)
+        if rest != n and len(rest.split()) >= 2 and len(rest.split()[0].strip(".")) > 1:
+            n = rest
+        n = _TRAILING_MARK.sub("", n)
         if n == before:
             break
     return _undouble(n.strip(" -,"))

@@ -63,21 +63,21 @@
   .season-pick.right { left: auto; right: 30px; }
   .season-pick[hidden] { display: none; }
   .season-pick .seg text.tight { letter-spacing: 0.06em; font-size: 11px; }
-  .season-pick .pk-head { padding: 4px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.9); font: 700 16px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); }
+  .season-pick .pk-head { padding: 5px 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.9); font: 700 19px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); }
   .season-pick svg { display: block; overflow: visible; }
   .season-pick .seg { cursor: pointer; outline: none; }
   /* the corner rings muted like the paint behind them (MUTE), so they don't glare */
   .season-pick svg { filter: saturate(0.6) brightness(1.04); }
   .season-pick .seg path.band { fill: var(--panel); stroke: var(--ink); stroke-width: 1.3; transition: fill 0.18s, stroke 0.18s; }
-  .season-pick .seg text { font: 700 12.5px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; letter-spacing: 0.2em; text-transform: uppercase; fill: var(--ink); pointer-events: none; transition: fill 0.18s; }
+  .season-pick .seg text { font: 700 13.5px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; letter-spacing: 0.2em; text-transform: uppercase; fill: var(--ink); pointer-events: none; transition: fill 0.18s; }
   .season-pick .seg:hover path.band { fill: var(--paper-hi); stroke: var(--accent); }
   .season-pick .seg:hover text { fill: var(--accent); }
   .season-pick .seg[aria-checked="true"] path.band { fill: var(--accent); stroke: var(--accent); }
   .season-pick .seg[aria-checked="true"] text { fill: var(--paper-hi); }
   .season-pick .seg:focus-visible path.band { stroke: var(--ink); stroke-width: 2.5; }
   .season-pick .hub { fill: var(--paper-hi); stroke: var(--line); stroke-width: 1; }
-  .season-pick .hub-n { font: 700 22px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
-  .season-pick .hub-w { font: 600 8px/1 'Barlow', system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; fill: var(--muted); text-anchor: middle; dominant-baseline: central; }
+  .season-pick .hub-n { font: 700 26px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+  .season-pick .hub-w { font: 600 9.5px/1 'Barlow', system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; fill: var(--muted); text-anchor: middle; dominant-baseline: central; }
   @media (max-height: 760px), (max-width: 1100px) { .season-pick { top: 18px; } .season-pick svg { width: 150px; height: 150px; } }
   @media (max-height: 600px) { .season-pick svg { width: 116px; height: 116px; } .season-pick .pk-head { font-size: 13px; } }
   /* The seasons' colors: the page's tone follows the season picked (or violet for pro and high school maps) */
@@ -134,14 +134,14 @@
   .sky .grid { fill: none; stroke: #FFFFFF; stroke-width: 1; opacity: 0.22; transition: stroke 0.7s; }
   .sky .grid.major { stroke-width: 1.4; opacity: 0.32; }
   .sky .edge { fill: none; stroke: #FFFFFF; stroke-width: 1.5; opacity: 0.3; transition: stroke 0.7s; }
-  .scale .season { font: 800 17px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; fill: var(--tone); text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--paper); stroke-width: 8px; }
+  .scale .season { font: 800 21px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; fill: var(--tone); text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--paper); stroke-width: 8px; }
 
   /* The globe */
   .center {
-    position: absolute; left: 370px; top: 310px; width: 440px; height: 440px; border-radius: 50%;
+    position: absolute; left: 280px; top: 260px; width: 680px; height: 680px; border-radius: 50%;
     background: radial-gradient(circle at 36% 30%, var(--sea-hi) 0%, var(--sea) 52%, var(--sea-lo) 100%);
     box-shadow: 0 0 0 1.5px var(--ink), 0 0 0 6px var(--paper), 0 0 0 7px var(--line), 0 18px 50px -24px rgba(17, 24, 39, 0.55), 0 0 60px -10px var(--glow);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 22px; gap: 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 70px; gap: 8px;
     overflow: hidden; transition: box-shadow 0.3s;
   }
   .center > :not(.earth):not(.earth-cv):not(.shade) { position: relative; }
@@ -161,21 +161,21 @@
   .scale .axis { stroke: var(--ink); stroke-width: 3.5; stroke-linecap: round; opacity: 0.8; }
   .scale .pin { fill: var(--paper-hi); stroke: var(--ink); stroke-width: 2; }
   .scale .pin-dot { fill: var(--ink); }
-  .scale .pole { font: 700 17px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+  .scale .pole { font: 700 20px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
   .kicker { font-size: 15px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); }
   .center .kicker, .center .title, .center .hint, .gname { color: var(--on-globe); }
-  .center .title { font-size: 76px; line-height: 0.95; margin: 0; letter-spacing: 0.01em; white-space: nowrap; align-self: stretch; }
+  .center .title { font-size: 108px; line-height: 0.95; margin: 0; letter-spacing: 0.01em; white-space: nowrap; align-self: stretch; }
   .center .title span, .list-head .title span { color: var(--accent); text-transform: none; letter-spacing: 0; font-size: 1em; transition: color 0.2s; }
   .center .title span { color: #C4B5FD; }
   .hint { margin: 0 0 14px; font-size: 21px; line-height: 1.35; color: var(--dim); max-width: 320px; }
-  .center .kicker { font-size: 15px; }
-  .center .hint { color: var(--on-globe); font-weight: 500; font-size: 20px; line-height: 1.25; margin-bottom: 8px; max-width: 330px; min-height: 50px; }
-  .center .hint.stat { color: #DDD6FE; font-weight: 600; font-size: 18px; line-height: 1.25; }
+  .center .kicker { font-size: 23px; }
+  .center .hint { color: var(--on-globe); font-weight: 500; font-size: 26px; line-height: 1.25; margin-bottom: 8px; max-width: 440px; min-height: 50px; }
+  .center .hint.stat { color: #DDD6FE; font-weight: 600; font-size: 24px; line-height: 1.25; }
 
   /* Sport discs: dashed when the sport has nothing on this side yet */
   .disc, .badge { border-radius: 50%; border: 1.5px dashed rgba(17, 24, 39, 0.42); background: var(--paper-hi); color: var(--muted); display: flex; align-items: center; justify-content: center; }
   .disc.live, .live > .pick > .badge { border-style: solid; border-color: var(--ink); background: var(--panel); color: var(--ink); box-shadow: inset 0 0 0 4px var(--paper-hi), inset 0 0 0 5px var(--edge); }
-  .disc { position: absolute; left: 0; top: 0; width: 64px; height: 64px; padding: 0; cursor: pointer; font: inherit; transition: transform 0.18s ease, opacity 0.18s, box-shadow 0.18s, border-color 0.18s, background 0.18s, color 0.18s; }
+  .disc { position: absolute; left: 0; top: 0; width: 128px; height: 128px; padding: 0; cursor: pointer; font: inherit; transition: transform 0.18s ease, opacity 0.18s, box-shadow 0.18s, border-color 0.18s, background 0.18s, color 0.18s; }
 
   /* Lighting: the lit sport glows, the rest fade */
   .disc.lit { transform: scale(1.14); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 6px var(--glow), 0 0 30px var(--glow); }
@@ -188,7 +188,7 @@
 
   /* The lit sport's page buttons fade in beside it */
   .sat {
-    position: absolute; left: 0; top: 0; width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--accent); background: var(--paper-hi); color: var(--accent);
+    position: absolute; left: 0; top: 0; width: 52px; height: 52px; border-radius: 50%; border: 1.5px solid var(--accent); background: var(--paper-hi); color: var(--accent);
     display: flex; align-items: center; justify-content: center; text-decoration: none;
     opacity: 0; visibility: hidden; transform: scale(0.6);
     transition: opacity 0.16s, transform 0.16s, visibility 0s 0.16s;
@@ -198,7 +198,7 @@
   .sat.off { border: 1.5px dashed rgba(17, 24, 39, 0.42); color: var(--muted); }
   /* Each button's name, above or below it, so the names stay close to the disc and clear of the globe's title */
   .sat .tag { position: absolute; left: 50%; translate: -50% 0; padding: 2px 9px 3px; border-radius: 999px; background: var(--paper-hi); box-shadow: 0 0 0 1px var(--line);
-    font-size: 15px; font-weight: 600; line-height: 1.2; white-space: nowrap; color: var(--accent); pointer-events: none; }
+    font-size: 18px; font-weight: 600; line-height: 1.2; white-space: nowrap; color: var(--accent); pointer-events: none; }
   .sat.men .tag { color: var(--men); translate: -70% 0; }      /* the two teams' names lean apart */
   .sat.women .tag { color: var(--women); translate: -30% 0; }
   .sat.off .tag { color: var(--muted); }
@@ -207,13 +207,13 @@
   /* A sport with both teams: two smaller circles a side, blue for men's and pink for women's, each with the
      man or woman figure on its edge */
   :root { --men: #2563EB; --women: #DB2777; }
-  .sat.small { width: 38px; height: 38px; }
+  .sat.small { width: 48px; height: 48px; }
   /* the small ring the lit sport's page buttons sit on */
-  .mini { position: absolute; left: 0; top: 0; width: 168px; height: 168px; border-radius: 50%; border: 1.5px dashed var(--accent);
+  .mini { position: absolute; left: 0; top: 0; width: 264px; height: 264px; border-radius: 50%; border: 1.5px dashed var(--accent);
     pointer-events: none; opacity: 0; transform: scale(0.6); transition: opacity 0.16s, transform 0.16s; }
   .mini.lit { opacity: 0.55; transform: none; }
-  .sum .tl { display: block; font-size: 16px; }
-  .center .hint .tl { display: block; font-size: 14px; white-space: nowrap; }
+  .sum .tl { display: block; font-size: 20px; }
+  .center .hint .tl { display: block; font-size: 19px; white-space: nowrap; }
   .center .hint .tl.men { color: #93C5FD; }
   .center .hint .tl.women { color: #F9A8D4; }
   .sum .tl.men { color: var(--men); }
@@ -240,27 +240,28 @@
   .disc:focus-visible, .sat:focus-visible, .btn:focus-visible, .pick:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
   /* Each sport's name sits under its disc; a lit sport's drops below its small ring of buttons */
-  .label { position: absolute; left: 0; top: 0; width: 170px; display: flex; flex-direction: column; align-items: center; text-align: center; pointer-events: none; gap: 1px; transition: opacity 0.18s; }
-  .label .n { font-size: 14px; line-height: 1.1; color: var(--dim); letter-spacing: 0.06em; white-space: nowrap; }
+  .label { position: absolute; left: 0; top: 0; width: 260px; display: flex; flex-direction: column; align-items: center; text-align: center; pointer-events: none; gap: 1px; transition: opacity 0.18s; }
+  .label .n { font-size: 25px; line-height: 1.1; color: var(--dim); letter-spacing: 0.06em; white-space: nowrap; }
   .label.lit { z-index: 6; }
-  .label.lit .n { font-size: 18px; padding: 1px 10px 2px; border-radius: 999px; background: var(--paper); }
+  .label.lit .n { font-size: 24px; padding: 1px 10px 2px; border-radius: 999px; background: var(--paper); }
   .sat, .mini { z-index: 5; }
   .label.live .n, .label.lit .n { color: var(--ink); }
-  .label .s { font: 600 17px/1.2 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; color: var(--muted); min-height: 24px; }
+  .label .s { font: 600 26px/1.2 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; color: var(--muted); min-height: 24px; }
   .label .s:empty { display: none; }   /* no Men's/Women's line (Football, Baseball, Softball): no blank gap */
 
-  .legend { display: flex; gap: 28px; align-items: center; font-size: 14px; color: var(--muted); min-height: 20px; }
+  #ring-view:has(#ring.has-lit) .legend { visibility: hidden; }   /* a lit sport's own buttons name the teams */
+  .legend { display: flex; gap: 32px; align-items: center; font-size: 19px; color: var(--muted); min-height: 20px; }
   .legend span { display: inline-flex; align-items: center; gap: 8px; }
 
   /* A clicked sport's maps, in the globe */
   .center.menu .kicker, .center.menu .title, .center.menu .hint, .center.menu .hsopen { display: none; }
   .gmaps { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
   .gmaps[hidden] { display: none; }
-  .gname { font-size: 27px; letter-spacing: 0.04em; line-height: 1; color: var(--on-globe); }
+  .gname { font-size: 40px; letter-spacing: 0.04em; line-height: 1; color: var(--on-globe); }
   .gcols { display: flex; gap: 8px; justify-content: center; }
-  .gcol { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 18px; }
+  .gcol { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 26px; }
   .gcols.one .gcol { display: grid; grid-template-columns: auto auto; gap: 3px 14px; justify-items: center; }
-  .gcol b { font-size: 14px; font-weight: 700; color: inherit; }
+  .gcol b { font-size: 21px; font-weight: 700; color: inherit; }
   .gcol.men { color: #93C5FD; }
   .gcol.women { color: #F9A8D4; }
   .gcol a { font-weight: 600; color: var(--ink); text-decoration: none; white-space: nowrap; border-radius: 4px; padding: 0 5px; background: rgba(255, 255, 255, 0.92); }
@@ -269,10 +270,11 @@
 
   /* Search by high school: a button in the globe (and atop the phone list) that opens a panel at full size.
      The globe scales with the window, so the button's words grow as it shrinks (--k, set in fit()). */
-  .hsopen { min-height: 30px; padding: 3px 14px; border: 1px solid var(--ink); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; white-space: nowrap;
-    font: 600 max(15px, calc(11.5px / var(--k, 1)))/1.2 'Barlow', system-ui, sans-serif; transition: background 0.2s, color 0.2s; }
+  .hsopen { min-height: 38px; padding: 4px 16px; border: 1px solid var(--ink); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; white-space: nowrap;
+    font: 600 max(17px, calc(14px / var(--k, 1)))/1.2 'Barlow', system-ui, sans-serif; transition: background 0.2s, color 0.2s; }
   .gbtns { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
   a.hsopen { display: inline-flex; align-items: center; text-decoration: none; }
+  a.hsopen[hidden] { display: none; }
   .hsopen:hover { background: var(--accent); border-color: var(--accent); color: var(--paper-hi); }
   .hsopen:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
   .list-head .hsopen { min-height: 44px; margin-top: 10px; }
@@ -282,19 +284,19 @@
   dialog.hsq[open] { display: flex; flex-direction: column; gap: 12px; }
   dialog.hsq::backdrop { background: rgba(17, 24, 39, 0.32); }
   .hsq-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .hsq-head h2 { margin: 0; font-size: 20px; line-height: 1.1; }
+  .hsq-head h2 { margin: 0; font-size: 24px; line-height: 1.1; }
   .hsq-x { flex: none; width: 44px; height: 44px; margin: -8px -10px -8px 0; border: 0; border-radius: 50%; background: none; color: var(--muted); font-size: 26px; line-height: 1; cursor: pointer; }
   .hsq-x:hover { color: var(--ink); }
   #hsInput { width: 100%; height: 46px; padding: 0 16px; border: 1px solid var(--line); border-radius: 23px; background: var(--panel); color: var(--ink); font: inherit; font-size: 16px; }
   #hsInput:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   .hsq-out { overflow: auto; min-height: 0; }
-  .hsq-note { margin: 2px 0; font-size: 14px; color: var(--muted); }
+  .hsq-note { margin: 2px 0; font-size: 17px; color: var(--muted); }
   .hsq-hit { padding: 9px 0; border-top: 1px solid var(--edge); }
   .hsq-hit:first-child { border-top: 0; }
-  .hsq-name { font-weight: 600; font-size: 16px; }
-  .hsq-name small { font-weight: 400; font-size: 14px; color: var(--muted); }
+  .hsq-name { font-weight: 600; font-size: 19px; }
+  .hsq-name small { font-weight: 400; font-size: 16px; color: var(--muted); }
   .hsq-sports { display: flex; flex-wrap: wrap; gap: 3px 12px; margin-top: 3px; }
-  .hsq-sports a { font-size: 14px; color: var(--accent); text-underline-offset: 2px; }
+  .hsq-sports a { font-size: 17px; color: var(--accent); text-underline-offset: 2px; }
   .hsq-sports a.men { color: var(--men); }
   .hsq-sports a.women { color: var(--women); }
 
@@ -337,7 +339,7 @@
     footer { padding: 10px 24px 22px; font-size: 15px; }
   }
 
-  footer { padding: 18px 24px 26px; border-top: 1px solid var(--edge); margin: 0 18px; font: 500 15px/1.5 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; color: var(--muted); text-align: center; }
+  footer { padding: 18px 24px 26px; border-top: 1px solid var(--edge); margin: 0 18px; font: 500 17px/1.5 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; color: var(--muted); text-align: center; }
   footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 18px; }
   .src-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 18px; border-radius: 999px; border: 1.5px solid var(--ink); color: var(--ink); text-decoration: none; white-space: nowrap;
     font: 700 14px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.14em; font-style: normal; background: var(--panel); transition: background 0.2s, color 0.2s, border-color 0.2s; }
@@ -382,7 +384,7 @@
         <div class="kicker" data-role="kicker">College</div>
         <h1 class="title cond" data-role="title"></h1>
         <p class="hint" data-role="hint"></p>
-        <div class="gbtns"><button type="button" class="hsopen" data-hs-open aria-label="Search by high school" title="Search by high school"><span class="hs-long">Search by high school</span><span class="hs-short">High schools</span></button><a class="hsopen" href="pro-pipeline.html" title="High school to college to the NFL, NBA, MLB and NHL"><span class="hs-long">Pro Pipeline</span><span class="hs-short">Pros</span></a></div>
+        <div class="gbtns"><button type="button" class="hsopen" data-hs-open aria-label="Search by high school" title="Search by high school"><span class="hs-long">Search by high school</span><span class="hs-short">High schools</span></button><a class="hsopen pro-btn" href="pro-pipeline.html" title="High school to college to the NFL, NBA, MLB and NHL"><span class="hs-long">Pro Pipeline</span><span class="hs-short">Pros</span></a></div>
         <div class="gmaps" id="globeMaps" hidden></div>
       </div>
     </div>
@@ -395,7 +397,7 @@
     <div class="kicker">College</div>
     <h1 class="title cond" data-role="title"></h1>
     <p class="hint" data-role="hint"></p>
-    <div class="gbtns"><button type="button" class="hsopen" data-hs-open aria-label="Search by high school" title="Search by high school"><span class="hs-long">Search by high school</span><span class="hs-short">High schools</span></button><a class="hsopen" href="pro-pipeline.html" title="High school to college to the NFL, NBA, MLB and NHL"><span class="hs-long">Pro Pipeline</span><span class="hs-short">Pros</span></a></div>
+    <div class="gbtns"><button type="button" class="hsopen" data-hs-open aria-label="Search by high school" title="Search by high school"><span class="hs-long">Search by high school</span><span class="hs-short">High schools</span></button><a class="hsopen pro-btn" href="pro-pipeline.html" title="High school to college to the NFL, NBA, MLB and NHL"><span class="hs-long">Pro Pipeline</span><span class="hs-short">Pros</span></a></div>
   </div>
   <div class="rows" id="rows"></div>
 </main>
@@ -517,10 +519,10 @@
 
   // ---- Build the ring once (positions in a 1180×1020 box, scaled to fit) ----
   // One ring around the globe, holding one season's sports at a time; the picker at the top left changes it.
-  const W = 1180, H = 1060, CX = W / 2, CY = H / 2, GLOBE = 200;
-  const DISC = 32;                 // a disc's radius
-  const SHOWN = 220;               // the globe's radius on the stage (GLOBE is its map's, inside the svg's 400×400)
-  const ORBIT = { R: 432, start: 30 };
+  const W = 1240, H = 1200, CX = W / 2, CY = H / 2, GLOBE = 200;
+  const DISC = 64;                 // a disc's radius
+  const SHOWN = 340;               // the globe's radius on the stage (GLOBE is its map's, inside the svg's 400×400)
+  const ORBIT = { R: 500, start: 30 };
   const SEASONS = ['fall', 'winter', 'spring'].filter((id) => SPORTS.some((s) => s.ring === id));
   const OUTER = ORBIT.R;
   const rad = (d) => d * Math.PI / 180;
@@ -530,15 +532,15 @@
   // The lit sport's page buttons sit on a small ring of their own around its disc, at these compass
   // angles (0 = up), the same wherever the disc is: players to the left and coaches to the right; with both
   // teams, men's on the left (players above, coaches below) and women's on the right.
-  const MINI_R = 84;
+  const MINI_R = 132;
   const SAT_AT = { players: { '': 270, m: 315, w: 45 }, staff: { '': 90, m: 225, w: 135 } };
   const items = SPORTS.map((s) => {
     const sats = [];
-    let html = `<button type="button" class="disc" data-id="${s.id}" aria-pressed="false">${sportSvg(s.icon, 44)}</button>`;
+    let html = `<button type="button" class="disc" data-id="${s.id}" aria-pressed="false">${sportSvg(s.icon, 84)}</button>`;
     ['players', 'staff'].forEach((kind) => s.teams.forEach((t) => {
       const off = SAT_AT[kind][t.sex || ''];
       html += satHTML(s, kind, t, off > 270 || off < 90 ? 't' : 'b');
-      sats.push({ kind, team: t.id, off: SAT_AT[kind][t.sex || ''], half: t.sex ? 19 : 20 });
+      sats.push({ kind, team: t.id, off: SAT_AT[kind][t.sex || ''], half: t.sex ? 24 : 26 });
     }));
     html += `<span class="mini" data-id="${s.id}" aria-hidden="true"></span>`;
     html += `<div class="label" data-id="${s.id}" aria-hidden="true"><span class="n cond">${s.name}</span><span class="s">${s.sub}</span></div>`;
@@ -553,7 +555,7 @@
     { id: 'pro-nfl', lg: 'NFL', icon: 'football', sub: 'since 2016' }, { id: 'pro-nba', lg: 'NBA', icon: 'basketball', sub: 'since 2016' },
     { id: 'pro-mlb', lg: 'MLB', icon: 'baseball', sub: 'since 2016' }, { id: 'pro-nhl', lg: 'NHL', icon: 'hockey', sub: 'since 2016' }];
   LEAGUE_DISCS.forEach((L) => {
-    ring.insertAdjacentHTML('beforeend', `<a class="disc live" data-id="${L.id}" href="pro-pipeline.html#lg=${L.lg}" aria-label="${L.lg}: high school to college to the pros">${sportSvg(L.icon, 44)}</a>`
+    ring.insertAdjacentHTML('beforeend', `<a class="disc live" data-id="${L.id}" href="pro-pipeline.html#lg=${L.lg}" aria-label="${L.lg}: high school to college to the pros">${sportSvg(L.icon, 84)}</a>`
       + `<div class="label live" data-id="${L.id}" aria-hidden="true"><span class="n cond">${L.lg}</span><span class="s">${L.sub}</span></div>`);
     items.push({ id: L.id, ring: 'pro', pro: L, pair: false, base: 0, disc: ring.querySelector(`.disc[data-id="${L.id}"]`), mini: null, sats: [],
       label: ring.querySelector(`.label[data-id="${L.id}"]`) });
@@ -672,7 +674,7 @@
   // canvas knows once where on the picture it looks with the Earth unturned; turning the Earth only slides that
   // sideways, so a redraw is one quick pass. If the picture can't be read (the page opened as a file, say), the
   // drawn map below takes its place.
-  const PHOTO_SIZE = 600;          // the canvas's pixels across (shown at 440 px; sharp and still quick to redraw)
+  const PHOTO_SIZE = 860;          // the canvas's pixels across (shown at 680 px; sharp and still quick to redraw)
   let tex = null;
   function drawPhoto(lon) {
     const { data, w, u0, row, px, out } = tex, shift = -lon / 360 * w;
@@ -744,8 +746,11 @@
       if (it.mini) put(it.mini, c, MINI_R);
       it.sats.forEach((x) => put(x.el, { x: c.x + MINI_R * Math.sin(rad(x.off)), y: c.y - MINI_R * Math.cos(rad(x.off)) }, x.half));
       // the name sits under the disc, or under its small ring of buttons when it's lit
-      const below = it.id !== lit || it.pro ? DISC + 2 : it.pair ? MINI_R + 56 : MINI_R + 24;
-      it.label.style.translate = `calc(${c.x.toFixed(2)}px - 50%) ${(c.y + below).toFixed(2)}px`;
+      // A lit sport's name: right under the disc for a one-team sport (its two buttons sit left and right); for two
+      // teams, just above the disc, between the upper buttons (below, it would land on the globe or the legend).
+      const up = it.id === lit && it.pair && !it.pro;
+      const y = up ? c.y - DISC - 6 - it.label.offsetHeight : c.y + DISC + 2;
+      it.label.style.translate = `calc(${c.x.toFixed(2)}px - 50%) ${y.toFixed(2)}px`;
     });
     dial.setAttribute('transform', `rotate(${rot.toFixed(3)} ${CX} ${CY})`);
     drawEarth(-20 + rot * EARTH_SPIN);
@@ -782,11 +787,11 @@
     light(lit, true);
   }
 
-  // The globe's title: as big as fits across the globe (76px at most), whichever font has loaded.
+  // The globe's title: as big as fits across the globe (108px at most), whichever font has loaded.
   function fitTitle() {
     const el = document.querySelector('.center .title');
     if (!el) return;
-    let size = 76;
+    let size = 108;
     el.style.fontSize = size + 'px';
     while (el.scrollWidth > el.clientWidth && size > 40) el.style.fontSize = (size -= 2) + 'px';
   }
@@ -968,7 +973,10 @@
   });
   if (level !== 'college') { arrange(false); place(0); nameSeason(); document.getElementById('seasonPick').hidden = true; }
   // the page's tone: the season's color for college maps, violet for the others (CSS reads body[data-tone])
-  function setTone() { document.body.dataset.tone = level === 'college' ? season : level; }
+  function setTone() {
+    document.body.dataset.tone = level === 'college' ? season : level;
+    document.querySelectorAll('.pro-btn').forEach((b) => { b.hidden = level === 'hs'; });   // no Pro Pipeline button on the high school maps
+  }
   setTone();
   document.querySelectorAll('[data-role="kicker"]').forEach((el) => { el.textContent = LEVEL_NAME[level]; });
 

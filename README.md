@@ -70,9 +70,11 @@ functions in `scripts/core.py` for this (`season_span`, `season_from_label`, `fi
 - **Season** picker (top left, college maps): fall, winter or spring; it opens on the season being played.
 - The address keeps the choice (`#season=winter`, `#level=pro`).
 - The globe is NASA's Blue Marble (`docs/img/earth.jpg`, from the three-globe package's example images); if it can't be
-  read, world-atlas's 1:50m map is drawn instead.
+  read, world-atlas's 1:50m map is drawn instead. The ring's layout is a fixed stage (`W`, `H`, `SHOWN` for the globe,
+  `ORBIT`, `DISC`, `MINI_R` in index.html) scaled to fit the window.
 - Behind it, oil-paint brushstrokes in the season's colors (`PAINT` in index.html; violets for pro and high school),
   muted so they don't glare (`MUTE`), under a faint latitude-longitude grid.
+- The globe holds Search by high school and, except on the high school maps, a Pro Pipeline button.
 - Clicking a sport lists its maps; **Search by high school** looks through `docs/high_schools.json` (then
   `high_schools_more.json`, the one-player schools) and links to that
   school on each sport's Recruiting Map.

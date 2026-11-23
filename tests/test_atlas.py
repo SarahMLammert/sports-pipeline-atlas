@@ -1645,8 +1645,7 @@ def test_site_code_is_clean():
 
 
 def test_every_sport_has_its_pages():
-    # One set of pages for every sport (docs/players-dotmap.html?sport=...), the sport's words in docs/sports.js,
-    # and its old addresses forwarding (python3 scripts/build.py pages writes them).
+    # One set of pages for every sport (docs/players-dotmap.html?sport=...) and the sport's words in docs/sports.js.
     assert build.site_pages_main(["--check"]) == 0          # docs/sports.js is what the settings say
     words = build.sport_words(build.site_sports(ROOT / "docs"))
     for sport, w in words.items():
@@ -1657,7 +1656,7 @@ def test_every_sport_has_its_pages():
     for page in ("players-dotmap.html", "players-transfers.html"):
         text = (ROOT / "docs" / page).read_text(encoding="utf-8")
         assert " his hometown" not in text and "he isn't on that" not in text
-    assert "sport=softball" in build.forwarding_page("softball", "players-dotmap.html")
+    assert not list((ROOT / "docs").glob("*/players-dotmap.html"))      # the old addresses' pages are gone
 
 
 def test_front_page_discs_from_settings(tmp_path):

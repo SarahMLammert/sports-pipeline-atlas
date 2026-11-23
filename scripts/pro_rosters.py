@@ -64,7 +64,6 @@ PRO_TEAMS = CONFIG / "shared" / "pro_teams.csv"     # each pro team's city and w
 
 # Past NFL seasons: nflverse's roster file for a season (on GitHub), and its team codes
 NFLVERSE_URL = "https://github.com/nflverse/nflverse-data/releases/download/rosters/roster_{season}.csv"
-FIRST_SEASON = 2016           # the first season worth reading: the college rosters start in 2016
 NFL_CODES = {
     "ARI": "Arizona Cardinals", "ATL": "Atlanta Falcons", "BAL": "Baltimore Ravens", "BUF": "Buffalo Bills",
     "CAR": "Carolina Panthers", "CHI": "Chicago Bears", "CIN": "Cincinnati Bengals", "CLE": "Cleveland Browns",

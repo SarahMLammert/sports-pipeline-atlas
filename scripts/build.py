@@ -10,7 +10,7 @@ Commands:
     python3 scripts/build.py locations --sport football   # campus locations
     python3 scripts/build.py frozen --sport football   # frozen class years
     python3 scripts/build.py check --sport football   # checking the rosters
-    python3 scripts/build.py pages           # the site's pages: old addresses forward to the shared ones
+    python3 scripts/build.py pages           # docs/sports.js and docs/high_schools.json, from the settings
 """
 from __future__ import annotations
 
@@ -975,20 +975,18 @@ def compare_seasons_main(argv=None) -> int:
     return 0
 
 
-PAGES_DOC = """Write docs/sports.js from every sport's settings, and make each sport's old page addresses forward to
-the shared pages.
+PAGES_DOC = """Write docs/sports.js from every sport's settings, and docs/high_schools.json.
 
-    python3 scripts/build.py pages            # write docs/sports.js, docs/high_schools.json and docs/<sport>/<page>.html
+    python3 scripts/build.py pages            # write docs/sports.js and docs/high_schools.json
     python3 scripts/build.py pages --check    # only say what is missing or out of date
 
 The site has one set of pages for every sport: docs/players-dotmap.html, players-heatmap.html,
-players-transfers.html, staff-moves.html and staff-directory.html, opened as players-dotmap.html?sport=softball
-(and school-influence.html, which never had a docs/<sport>/ address, so it has no forwarding page).
-Edit those files directly. A sport's words on them (title, description, heading, subtitle, she/her) and its
+players-transfers.html, staff-moves.html, staff-directory.html and school-influence.html, opened as
+players-dotmap.html?sport=softball. Edit those files directly. A sport's words on them (title, description, heading, subtitle, she/her) and its
 place on the front page are in the "site" part of config/<sport>/settings.json; this command copies them into
 docs/sports.js, which the pages read. A sport is on the site once docs/<sport>/ exists (build.py map makes
-it); pipeline.py's build step runs this command after the map. The old addresses (docs/softball/players-dotmap.html, in links people
-have saved) are small pages that forward to the new one, keeping the #view part of the link."""
+it); pipeline.py's build step runs this command after the map. (Until Nov 22 it also wrote forwarding pages at
+the old addresses, docs/<sport>/players-dotmap.html and so on; those were removed.)"""
 
 PAGES = ["players-dotmap.html", "players-heatmap.html", "players-transfers.html", "staff-moves.html",
          "staff-directory.html"]
@@ -1005,16 +1003,6 @@ SPORTS_JS_HEAD = """// Written by python3 scripts/build.py pages from the "site"
 // SPORT_DISCS: the front page's discs in order, each with its ring, its teams, their numbers (from summary.json, for
 //   when the page can't load it) and whether they're built yet (a team that isn't shows as coming soon).
 """
-
-
-def forwarding_page(sport: str, page: str) -> str:
-    """The page at a sport's old address: it sends the browser to the shared page for that sport."""
-    target = f"../{page}?sport={sport}"
-    return (f'<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>Moved</title>\n'
-            f'<meta name="robots" content="noindex">\n<link rel="canonical" href="{target}">\n'
-            f'<script>location.replace("{target}" + location.hash);</script>\n'
-            f'<meta http-equiv="refresh" content="0; url={target}">\n</head>\n'
-            f'<body><p>This page has moved: <a href="{target}">{page}?sport={sport}</a></p></body>\n</html>\n')
 
 
 def site_sports(docs: Path) -> list:
@@ -1153,16 +1141,6 @@ def site_pages_main(argv=None) -> int:
             tmp.write_text(hs_text, encoding="utf-8")
             tmp.replace(index)
             print("written: docs/high_schools.json")
-    for sport in (s.name for s in site_sports(docs)):
-        for page in PAGES:
-            path, want = docs / sport / page, forwarding_page(sport, page)
-            if path.exists() and path.read_text(encoding="utf-8") == want:
-                continue
-            print(f"{'out of date' if args.check else 'written'}: docs/{sport}/{page}")
-            if args.check:
-                problems += 1
-            else:
-                path.write_text(want, encoding="utf-8")
     if not problems:
         print("Every sport's pages are in place.")
     return 1 if problems else 0

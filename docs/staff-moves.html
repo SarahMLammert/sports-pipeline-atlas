@@ -243,11 +243,8 @@ a.nmb:hover { border-bottom-color: var(--fg); }
   // ---------- the lists ----------
   const pickBtn = (i) => `<button type="button" class="nmb" data-pick="${i}" title="Show ${name(i)}'s coaching moves">${swatch(i)}${name(i)}</button>`;
   const personLink = (p) => `<a class="nmb" href="staff-directory.html#person=${encodeURIComponent(people[p])}" title="${esc(people[p])}'s seasons, school by school">${esc(people[p])}</a>`;
-  const top = (arr, n = 10) => Array.from(arr, (v, i) => ({ i, n: v })).filter((x) => x.n > 0).sort((a, b) => b.n - a.n || a.i - b.i).slice(0, n);
-  function bars(rows, cls, max) {
-    if (!rows.length) return `<p class="note">None with these filters.</p>`;
-    return `<ol class="tl ${cls}">${rows.map((r) => `<li data-from="${r.from}" data-to="${r.to}"><span class="nm">${r.label}</span><span class="v"><b>${fmt(r.n)}</b></span><span class="b"><span style="width:${(r.n / max * 100).toFixed(1)}%"></span></span></li>`).join("")}</ol>`;
-  }
+  const top = GP.topN;
+  const bars = GP.barList;
   // one move: "2024  Kalen DeBoer — Head coach / from Washington, Head coach"
   function moveRow(k, side) {
     const p = MV.p[k], a = MV.a[k], b = MV.b[k], y = MV.y[k];

@@ -6,7 +6,7 @@
 
   // ---------- which sport ----------
   // The sport is in the address: players-dotmap.html?sport=softball. Its data is in its own folder
-  // (docs/softball/map_data.json). The old addresses (docs/softball/players-dotmap.html) forward here.
+  // (docs/softball/map_data.json).
   const SPORT_PAGES = window.SPORT_PAGES || {};
   const sport = new URLSearchParams(location.search).get("sport") || "";
   if (!SPORT_PAGES[sport]) {                  // no sport, or one that doesn't exist: the front page
@@ -655,6 +655,13 @@
   }
   function seasonSpan(a, b, spring) { return a === b ? seasonLabel(a, spring) : `${seasonLabel(a, spring)} to ${seasonLabel(b, spring)}`; }
   // ---------- small things every map page needs ----------
+  // the ten (or n) largest counts in an array, as { i, n }, biggest first (Transfer Map, Coaching Moves)
+  const topN = (arr, n = 10) => Array.from(arr, (v, i) => ({ i, n: v })).filter((x) => x.n > 0).sort((a, b) => b.n - a.n || a.i - b.i).slice(0, n);
+  // a list of bars: rows of { label, n, from, to }, each bar's length against max
+  function barList(rows, cls, max) {
+    if (!rows.length) return `<p class="note">None with these filters.</p>`;
+    return `<ol class="tl ${cls}">${rows.map((r) => `<li data-from="${r.from}" data-to="${r.to}"><span class="nm">${r.label}</span><span class="v"><b>${fmt(r.n)}</b></span><span class="b"><span style="width:${(r.n / max * 100).toFixed(1)}%"></span></span></li>`).join("")}</ol>`;
+  }
   const plural = (n, w) => `${fmt(n)} ${w}${n === 1 ? "" : "s"}`;
   const US_FIT = { type: "MultiPoint", coordinates: [[-124.7, 48.4], [-67, 47.4], [-80.1, 25.1], [-117.1, 32.5], [-97.2, 25.9], [-160, 21], [-150, 61]] };
   // The states' outlines. The route maps leave Puerto Rico out; the heat maps keep it.
@@ -813,5 +820,5 @@
   function setHash(h) {
     try { history.replaceState(null, "", location.pathname + location.search + (h ? "#" + h : "")); } catch { /* stays as it was */ }
   }
-  window.GP = { showChips, tabCount, dropdown, tabsHTML, tabToParams, tabFromParams, showTab, plural, US_FIT, usStates, curve, routeMap, loadFailed, setHash, $, dataUrl, he: pronoun.he, his: pronoun.his, saveKey, readSaved, STATE_ABBR, ABBR_STATE, fmt, pct, esc, css, narrow, loadData, unpackStints, springOf, seasonLabel, seasonSpan, makePalette, makeFilters, copyLink, trackBar, miles, median };
+  window.GP = { showChips, tabCount, dropdown, tabsHTML, tabToParams, tabFromParams, showTab, plural, topN, barList, US_FIT, usStates, curve, routeMap, loadFailed, setHash, $, dataUrl, he: pronoun.he, his: pronoun.his, saveKey, readSaved, STATE_ABBR, ABBR_STATE, fmt, pct, esc, css, narrow, loadData, unpackStints, springOf, seasonLabel, seasonSpan, makePalette, makeFilters, copyLink, trackBar, miles, median };
 })();

@@ -212,7 +212,7 @@ def ncaa(code: str) -> list[dict]:
     path = NCAA / f"{code}.json"
     if not path.exists():
         NCAA.mkdir(parents=True, exist_ok=True)
-        req = urllib.request.Request(URL.format(code), headers={"Accept": "application/json", "User-Agent": "college-sports-atlas"})
+        req = urllib.request.Request(URL.format(code), headers={"Accept": "application/json", "User-Agent": "sports-pipeline-atlas"})
         with urllib.request.urlopen(req, timeout=60) as fh:
             path.write_bytes(fh.read())
     rows = json.loads(path.read_text(encoding="utf-8"))

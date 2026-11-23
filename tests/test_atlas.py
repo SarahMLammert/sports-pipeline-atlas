@@ -333,7 +333,7 @@ def test_state_only_gets_the_states_middle(cache):
 # Roster pages: parsing Sidearm, WMT, Presto and Nuxt pages (football settings)
 # ==================================================================================================
 
-HERE = Path(__file__).parent
+HERE = Path(__file__).parent / "fixtures"
 
 
 # Football's settings, a few D1 schools and its junior colleges (so "Iowa Western" counts as a college), given to
@@ -1678,11 +1678,11 @@ def test_front_page_discs_from_settings(tmp_path):
 def test_real_roster_pages():
     # Nov 1: nine saved pages, one or two per kind of site (Sidearm classic and cards, WMT and Sidearm tables, a Nuxt
     # payload, embedded JSON, PrestoSports and Ardor pages through the browser, and Samford's), in
-    # tests/roster_pages.zip, with what the parser read from each in tests/roster_pages_expected.json. When it read
+    # tests/fixtures/roster_pages.zip, with what the parser read from each in tests/fixtures/roster_pages_expected.json. When it read
     # them they matched the saved rosters exactly. After a deliberate parser change, look at what changed, then
     # write the new results with:  UPDATE_ROSTER_PAGES=1 python3 -m pytest tests -q -k real_roster_pages
     import os
-    here = Path(__file__).resolve().parent
+    here = Path(__file__).resolve().parent / "fixtures"
     expected = json.loads((here / "roster_pages_expected.json").read_text(encoding="utf-8"))
     update = bool(os.environ.get("UPDATE_ROSTER_PAGES"))
     with zipfile.ZipFile(here / "roster_pages.zip") as z:

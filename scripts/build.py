@@ -10,7 +10,7 @@ Commands:
     python3 scripts/build.py locations --sport football   # campus locations
     python3 scripts/build.py frozen --sport football   # frozen class years
     python3 scripts/build.py check --sport football   # checking the rosters
-    python3 scripts/build.py pages           # docs/sports.js and docs/high_schools.json, from the settings
+    python3 scripts/build.py pages           # docs/sports.js and the high school search files, from the settings
 """
 from __future__ import annotations
 
@@ -975,9 +975,9 @@ def compare_seasons_main(argv=None) -> int:
     return 0
 
 
-PAGES_DOC = """Write docs/sports.js from every sport's settings, and docs/high_schools.json.
+PAGES_DOC = """Write docs/sports.js from every sport's settings, and the high school search files.
 
-    python3 scripts/build.py pages            # write docs/sports.js and docs/high_schools.json
+    python3 scripts/build.py pages            # write docs/sports.js, docs/high_schools.json and high_schools_more.json
     python3 scripts/build.py pages --check    # only say what is missing or out of date
 
 The site has one set of pages for every sport: docs/players-dotmap.html, players-heatmap.html,
@@ -1077,9 +1077,10 @@ def sports_js(docs: Path) -> tuple[str, list]:
 _NOT_A_HIGH_SCHOOL = re.compile(r"(hs|hs city\b.*|previous school|n a|na|none)")
 
 
-def high_schools_json(docs: Path) -> str:
-    """docs/high_schools.json as build.py pages writes it: every high school in every built sport's map data, for the
-    front page's search (Nov 4). {"sports": [team ids], "schools": [[name, state, [sport, players, spelling?], ...], ...]},
+def high_schools_json(docs: Path) -> tuple[str, str]:
+    """The front page's high school search files (Nov 4): every high school in every built sport's map data. Schools
+    with two or more players go in docs/high_schools.json, which the search reads first; the rest (one player each,
+    over half the schools) in docs/high_schools_more.json, read right after (Nov 22: 10.6 MB in one file was slow). {"sports": [team ids], "schools": [[name, state, [sport, players, spelling?], ...], ...]},
     most players first. A school is its hs_key plus its players' hometown state, as on the dot map, which
     keeps two Lincoln HSs apart. A sport's own spelling is listed when it differs, because the dot map's
     #hs= link has to match that sport's list."""
@@ -1105,7 +1106,9 @@ def high_schools_json(docs: Path) -> str:
             row.append([i, sum(teams[i].values())] + ([own] if own != shown else []))
         rows.append(row)
     rows.sort(key=lambda r: (-sum(x[1] for x in r[2:]), r[0], r[1]))
-    return json.dumps({"sports": sports, "schools": rows}, ensure_ascii=False, separators=(",", ":"))
+    main = [r for r in rows if sum(x[1] for x in r[2:]) >= 2]
+    dump = lambda d: json.dumps(d, ensure_ascii=False, separators=(",", ":"))
+    return dump({"sports": sports, "schools": main}), dump({"schools": rows[len(main):]})
 
 
 def site_pages_main(argv=None) -> int:
@@ -1131,16 +1134,18 @@ def site_pages_main(argv=None) -> int:
             tmp.write_text(text, encoding="utf-8")
             tmp.replace(js)
             print("written: docs/sports.js")
-    index, hs_text = docs / "high_schools.json", high_schools_json(docs)
-    if not index.exists() or index.read_text(encoding="utf-8") != hs_text:
+    for name, text in zip(("high_schools.json", "high_schools_more.json"), high_schools_json(docs)):
+        path = docs / name
+        if path.exists() and path.read_text(encoding="utf-8") == text:
+            continue
         if args.check:
-            print("out of date: docs/high_schools.json (run python3 scripts/build.py pages)")
+            print(f"out of date: docs/{name} (run python3 scripts/build.py pages)")
             problems += 1
         else:
-            tmp = index.with_suffix(".json.tmp")
-            tmp.write_text(hs_text, encoding="utf-8")
-            tmp.replace(index)
-            print("written: docs/high_schools.json")
+            tmp = path.with_suffix(".json.tmp")
+            tmp.write_text(text, encoding="utf-8")
+            tmp.replace(path)
+            print(f"written: docs/{name}")
     if not problems:
         print("Every sport's pages are in place.")
     return 1 if problems else 0

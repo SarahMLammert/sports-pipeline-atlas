@@ -1,5 +1,5 @@
 {
-  "name": "college-sports-atlas",
+  "name": "sports-pipeline-atlas",
   "private": true,
   "type": "module",
   "description": "Only for the linters: the site in docs/ has no build step.",

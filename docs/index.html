@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sports Pipeline Atlas</title>
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
@@ -66,6 +66,8 @@
   .season-pick .pk-head { padding: 4px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.9); font: 700 16px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); }
   .season-pick svg { display: block; overflow: visible; }
   .season-pick .seg { cursor: pointer; outline: none; }
+  /* the corner rings muted like the paint behind them (MUTE), so they don't glare */
+  .season-pick svg { filter: saturate(0.6) brightness(1.04); }
   .season-pick .seg path.band { fill: var(--panel); stroke: var(--ink); stroke-width: 1.3; transition: fill 0.18s, stroke 0.18s; }
   .season-pick .seg text { font: 700 12.5px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; letter-spacing: 0.2em; text-transform: uppercase; fill: var(--ink); pointer-events: none; transition: fill 0.18s; }
   .season-pick .seg:hover path.band { fill: var(--paper-hi); stroke: var(--accent); }
@@ -973,7 +975,8 @@
   render();
 
   // ---- Search by high school ----
-  // docs/high_schools.json (from build.py pages) is about 1.5 MB, so it's read the first time the panel opens.
+  // The schools come from build.py pages, read the first time the panel opens: docs/high_schools.json (schools with two or
+  // more players, most first) and then docs/high_schools_more.json (the one-player schools), added to the end as it arrives.
   // A result links to that school on each sport's Recruiting Map; a row is [name, state, [sport, players, spelling?], ...].
   (function hsSearch() {
     const dlg = document.getElementById('hsq'), box = document.getElementById('hsInput'), out = document.getElementById('hsOut');
@@ -983,6 +986,11 @@
     const load = () => ready || (ready = fetch('high_schools.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }).then((j) => {
       teams = j.sports.map((id) => { const s = SPORTS.find((x) => x.teams.some((t) => t.id === id)); return s && { s, t: s.teams.find((t) => t.id === id) }; });
       rows = j.schools.map((r) => ({ r, q: `${r[0]} ${r[1]}`.toLowerCase() }));
+      fetch('high_schools_more.json').then((r) => (r.ok ? r.json() : null)).then((m) => {
+        if (!m) return;
+        rows = rows.concat(m.schools.map((r) => ({ r, q: `${r[0]} ${r[1]}`.toLowerCase() })));
+        if (dlg.open) show();
+      }).catch(() => {});      // without it the search still has every school with two or more players
     }).catch((e) => { ready = null; throw e; }));
     const note = (text) => { out.innerHTML = `<p class="hsq-note">${esc(text)}</p>`; };
     function link([name, st], [i, n, own]) {

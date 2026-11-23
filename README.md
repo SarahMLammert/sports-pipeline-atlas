@@ -6,10 +6,10 @@ Where athletes come from, from high school to college to the pros, and where pla
 sport. Rosters and staff lists are scraped from each school's athletics site every season since 2016, hometowns are
 placed on a map, and everything is published as a static site in `docs/` (GitHub Pages).
 
-**Live site:** https://sarahmlammert.github.io/college-sports-atlas/
+**Live site:** https://sarahmlammert.github.io/sports-pipeline-atlas/
 
-Called the College Sports Atlas until Nov 22, 2026; the repository and the site's address still use
-`college-sports-atlas`.
+Called the College Sports Atlas until Nov 22, 2026 (the repository was `college-sports-atlas`; GitHub forwards the old
+repository address, but not the old site address).
 
 ## What's in it
 
@@ -73,7 +73,8 @@ functions in `scripts/core.py` for this (`season_span`, `season_from_label`, `fi
   read, world-atlas's 1:50m map is drawn instead.
 - Behind it, oil-paint brushstrokes in the season's colors (`PAINT` in index.html; violets for pro and high school),
   muted so they don't glare (`MUTE`), under a faint latitude-longitude grid.
-- Clicking a sport lists its maps; **Search by high school** looks through `docs/high_schools.json` and links to that
+- Clicking a sport lists its maps; **Search by high school** looks through `docs/high_schools.json` (then
+  `high_schools_more.json`, the one-player schools) and links to that
   school on each sport's Recruiting Map.
 
 ### Map pages
@@ -116,8 +117,8 @@ by numbers. If the tiles can't load, the maps keep their plain land.
 - Shared styles and helpers live in `docs/common.css` and `docs/common.js`; colors are CSS variables at the top of
   `common.css` and `index.html`. Headings use Plus Jakarta Sans, text Barlow.
 - `docs/sources.html` builds its list from `sports.js` and each `summary.json`.
-- Icons: `docs/favicon.svg`, `favicon-32.png` and `apple-touch-icon.png`; a new page needs the same three `<link>`
-  lines. The repository's social preview is `docs/img/social-card.png` (1280×640; set it in GitHub → Settings →
+- Icons: `docs/img/favicon.svg`, `favicon-32.png` and `apple-touch-icon.png`; a new page needs the same three
+  `<link>` lines. The repository's social preview is `docs/img/social-card.png` (1280×640; set it in GitHub → Settings →
   Social preview).
 
 **Publish:** GitHub → Settings → Pages → deploy from branch `main`, folder `/docs`. To look locally:
@@ -214,14 +215,15 @@ rosters/<sport>/    working files, not committed: rosters_<season>.csv, scrape r
                     attempts.csv, hometowns.csv, staff_<season>.csv, notes, logs and rosters.db
 rosters/pro/        the pro rosters, not committed
 docs/               the site: index.html, the six map pages, pro-pipeline.html, sources.html, common.js,
-                    common.css, basemap.js, tiles/bluemarble/, rivers.json, img/ (globe, social card),
+                    common.css, basemap.js, tiles/bluemarble/, rivers.json, img/ (globe, icons, social card),
                     pro/pipeline.json, sports.js; docs/<sport>/ has each sport's data files
 scripts/            core.py (paths, downloads, seasons, levels, sub-commands), sidearm.py (reading roster pages),
                     hometowns.py (reading hometown, class, height and weight fields), scrape_rosters.py,
                     scrape_reports.py, geocode.py, hometown_fixes.py, build.py, staff.py, pipeline.py,
                     new_sports.py, pro_rosters.py, nba_history.py
-tests/              test_atlas.py (the code, the parsers, the builds; nine real roster pages in
-                    roster_pages.zip with what the parser should read), test_pages.py (the site in a browser)
+tests/              test_atlas.py (the code, the parsers, the builds), test_pages.py (the site in a browser),
+                    fixtures/ (nine real roster pages in roster_pages.zip with what the parser should read, and
+                    two small hand-made pages)
 .cache/             downloaded pages (gzip) and town lists, not committed; it makes reruns fast
 ```
 
@@ -270,4 +272,3 @@ tests/              test_atlas.py (the code, the parsers, the builds; nine real 
 
 - Junior colleges with no known roster site are listed but not scraped; NJCAA's own stats pages could fill them.
 - Coaches are matched by name only, so two people with the same name can be mixed up.
-- `rosters/` was committed until Oct 28, so the git history is large (about 580 MB) until it's rewritten without it.

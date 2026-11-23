@@ -80,8 +80,9 @@ pages for every sport, opened with the sport in the address (`players-dotmap.htm
   staff data, so it needs no build step of its own.
 
 The maps sit on a physical relief (`docs/basemap.js`): NASA's Blue Marble shaded relief and bathymetry, as web-map
-tiles from FreeTiler (`cdn.jsdelivr.net/gh/freetiler/nasa-bluemarble`, zoom 0-8), recoloured in the browser like a
-physical atlas. Rivers are drawn on top from `docs/rivers.json` (Natural Earth's 1:10m rivers and lake
+tiles from FreeTiler (github.com/freetiler/nasa-bluemarble, MIT), recoloured in the browser like a physical atlas.
+Zooms 0-6 are kept in the site, `docs/tiles/bluemarble` (5,461 tiles, re-saved smaller: about 30 MB), because jsDelivr
+refuses that repository for being over its size limit (every tile came back 403). Rivers are drawn on top from `docs/rivers.json` (Natural Earth's 1:10m rivers and lake
 centerlines, public domain, scalerank 0-8, simplified to 0.01°; smaller rivers appear as the Recruiting Map zooms in). The Recruiting Map draws the tiles as it zooms; the fixed maps (Transfer Map, Coaching Moves, School
 Influence, Pro Pipeline) reproject them once per size. Footprints keeps its plain states, since it colours them by
 numbers. If the tiles can't load, the maps keep their plain land.
@@ -173,7 +174,8 @@ config/<sport>/        settings.json        roster paths, roster size, positions
 rosters/<sport>/       working files, not committed: rosters_<season>.csv, scrape reports, MISSING_ROSTERS.md,
                        attempts.csv, hometowns.csv, staff_<season>.csv, notes and logs, and rosters.db (below)
 docs/                  the site: index.html (the globe), the six map pages, pro-pipeline.html, sources.html,
-                       common.js, common.css, basemap.js (the physical relief) and rivers.json, img/earth.jpg (the
+                       common.js, common.css, basemap.js (the physical relief), tiles/bluemarble/ (its tiles) and
+                       rivers.json, img/earth.jpg (the
                        globe's picture), pro/pipeline.json (the Pro Pipeline's data), and sports.js (written by
                        build.py pages from the settings);
                        docs/<sport>/ has map_data.json, names.txt, summary.json, school_locations.json,

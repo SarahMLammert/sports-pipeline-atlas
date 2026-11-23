@@ -1,5 +1,6 @@
 // The physical basemap under the map pages: NASA's Blue Marble shaded relief and bathymetry, as web-map tiles
-// (FreeTiler's copy, served by jsDelivr: https://github.com/freetiler/nasa-bluemarble), recoloured in the browser to
+// (from FreeTiler, https://github.com/freetiler/nasa-bluemarble, MIT; zooms 0-6 kept in docs/tiles/bluemarble, since
+// jsDelivr refuses that repo for being over its size limit), recoloured in the browser to
 // look like a physical atlas: lighter, brighter land that keeps its relief shading, and the sea in atlas blues that
 // deepen offshore.
 //
@@ -10,8 +11,10 @@
 // If the tiles can't load, nothing is drawn and the pages keep their plain land colours.
 (function () {
   "use strict";
-  const URL = "https://cdn.jsdelivr.net/gh/freetiler/nasa-bluemarble/tiles/{z}/{x}/{y}.jpeg";
-  const MAX_Z = 8, SIZE = 256;
+  // next to this script, so every page finds them wherever it sits
+  const HERE = (document.currentScript && document.currentScript.src) || location.href;
+  const URL = new window.URL("tiles/bluemarble/", HERE).href + "{z}/{x}/{y}.jpeg";
+  const MAX_Z = 6, SIZE = 256;
   const DEEP = [92, 150, 205], SHALLOW = [208, 234, 247];
   const tiles = new Map();          // "z/x/y" -> { canvas, data } once loaded, null while loading, false if it failed
 
@@ -96,7 +99,8 @@
     const s = Math.sin(Math.max(-85.0511, Math.min(85.0511, lat)) * Math.PI / 180);
     return [(lon + 180) / 360, 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)];
   };
-  function render(projection, w, h, zoom = 6) {
+  function render(projection, w, h, zoom = MAX_Z) {
+    zoom = Math.min(zoom, MAX_Z);
     // drawn at up to ~700,000 pixels and scaled up: relief is soft, and this keeps a redraw under a second
     const k = Math.min(1, Math.sqrt(700000 / (w * h))), cw = Math.max(1, Math.round(w * k)), ch = Math.max(1, Math.round(h * k));
     const n = 2 ** zoom, where = new Float32Array(cw * ch * 2).fill(-1), need = new Set();

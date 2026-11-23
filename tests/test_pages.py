@@ -53,9 +53,16 @@ class _Quiet(http.server.SimpleHTTPRequestHandler):
         pass
 
 
+class _Server(http.server.ThreadingHTTPServer):
+    # The maps ask for dozens of relief tiles at once; with Python's default queue of 5 waiting connections, macOS
+    # resets the rest (ERR_CONNECTION_RESET).
+    request_queue_size = 256
+    daemon_threads = True
+
+
 def serve(docs: Path):
     """A web server for docs/ on a free port, in a background thread. Returns (server, base URL)."""
-    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(_Quiet, directory=str(docs)))
+    server = _Server(("127.0.0.1", 0), functools.partial(_Quiet, directory=str(docs)))
     threading.Thread(target=server.serve_forever, daemon=True).start()
     return server, f"http://127.0.0.1:{server.server_port}/"
 

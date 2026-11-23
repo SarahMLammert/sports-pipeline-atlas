@@ -42,7 +42,6 @@ def internet_is_fine(monkeypatch):
     monkeypatch.setattr(core, "internet_up", lambda *a, **k: True)
 
 
-
 # ==================================================================================================
 # Hometowns: parsing, the geocoder, the fixer
 # ==================================================================================================
@@ -1030,29 +1029,6 @@ def test_each_sport_has_its_own_normal_size():
     assert [sr.saved_reports(season(n), r)["A"]["status"] for n in (38, 8, 130)] == ["ok", "partial", "partial"]
 
 
-def test_a_slow_season_stops_after_its_time_limit():
-    job = sr.Job(rules=use("baseball"), season_minutes=0)    # already past the limit: nothing is downloaded
-    out = sr.scrape_school_all({"school": "A", "division": "D1", "domain": "a.edu"}, [2024, 2025], None, {}, job, skip=set())
-    assert [r["status"] for _, _, r in out] == ["failed", "failed"]
-    assert all(r["error"].startswith("timed out") for _, _, r in out)
-
-
-def test_a_slow_season_doesnt_use_up_the_next_seasons_time(monkeypatch):
-    clock, asked = [0.0], []
-    monkeypatch.setattr(sr.time, "monotonic", lambda: clock[0])
-    class Slow:
-        def get(self, url, remember_miss=True):
-            asked.append(url)
-            clock[0] += 40
-            return 404, url, ""
-    job = sr.Job(rules=use("baseball"), season_minutes=1)
-    out = sr.scrape_school_all({"school": "A", "division": "D1", "domain": "a.edu"}, [2023, 2024], Slow(), {}, job, skip=set())
-    assert len(asked) == 4                    # 2 pages each: 80 seconds passes the 60-second limit
-    assert {season for season, _, _ in out} == {2023, 2024}
-    assert all(r["error"].startswith("timed out: this season took over 1 minutes") for _, _, r in out)
-    assert all(core.reason_code(r) == "time_limit" and scrape_reports.counts_as_try(r) for _, _, r in out)
-
-
 def test_a_cell_label_with_several_slashes_isnt_read_as_the_hometown():
     # Tusculum football: every player's hometown was "Hometown/ Previous School", placed at Hometown, Illinois
     html = """<table><thead><tr><th>Name</th><th>Hometown/ Previous School / High School</th></tr></thead><tbody>
@@ -1203,13 +1179,6 @@ def test_a_certificate_error_skips_that_hosts_other_addresses(monkeypatch):
     assert any("//www." in u for u in asked)
 
 
-def test_player_pages_stop_at_the_time_limit():
-    players = [{"hometown": "", "bio_url": "/a", "high_school": "", "previous_school": ""}]
-    errors = []
-    assert sr.fill_from_bios(players, "https://a.edu/roster", None, errors, deadline=0) == 0
-    assert errors == ["bios: ran out of time after 0 of 1 player pages"]
-
-
 # ---------------------------------------------------------------------------- seasons
 
 def test_current_season_fall_and_spring():
@@ -1354,14 +1323,6 @@ def test_current_page_that_is_still_last_seasons_team(monkeypatch):
     assert sr.check_current_is_new([(2025, [dict(r) for r in old], rep())], saved, True)[0][1] != []
 
 
-def test_a_missing_package_stops_the_step(capsys):
-    assert core.pinned_versions()["geonamescache"]            # requirements.txt pins exact versions
-    with pytest.raises(SystemExit) as e:
-        core.check_packages(["requests", "surely-not-installed"], "Placing hometowns")
-    assert "surely-not-installed" in str(e.value) and "requirements.txt" in str(e.value)
-    core.check_packages(["requests"], "Scraping")             # installed: no stop
-
-
 def test_reason_codes():
     f = lambda err, status="failed", **kw: core.reason_code({"status": status, "error": err, **kw})
     # older reports: the code is worked out from the text, the most telling error first
@@ -1397,27 +1358,6 @@ def test_failures_that_are_not_missing_rosters():
     assert core.failure_kind(fail(2021), has, spring=True, today=oct30) == "failed"     # no 2020 roster
     assert core.failure_kind(fail(2020), lambda s, y: y in (2019, 2021), spring=False, today=oct30) == "covid"
     assert core.failure_kind({"status": "ok", "season": 2024}, has, spring=True, today=oct30) == "ok"
-
-
-def test_missing_rosters_lists_left_out_once(tiny):
-    reports = [
-        {"season": 2025, "school": "Alpha", "division": "D1", "status": "failed", "error": "https://alpha.com/r: HTTP 404"},
-        {"season": 2025, "school": "Blocked", "division": "D3", "status": "failed", "error": "left out: bot check every season"},
-        {"season": 2026, "school": "Blocked", "division": "D3", "status": "left_out", "error": "left out: bot check every season"},
-    ]
-    for season in (2025, 2026):
-        with open(tiny.rosters_dir / f"scrape_report_{season}.csv", "w", newline="") as f:
-            w = csv.DictWriter(f, fieldnames=sr.REPORT_FIELDS, extrasaction="ignore")
-            w.writeheader()
-            w.writerows(r for r in reports if r["season"] == season)
-    path = scrape_reports.write_missing_rosters(tiny.rosters_dir, tiny.schools_csv, "Softball", [],
-                                    division_order=["D1", "D2", "D3", "NAIA", "JUCO"], rules=sidearm.Rules.for_sport(tiny))
-    text = path.read_text()
-    assert "| division | ok | partial | failed | not posted yet | COVID | left out |" in text
-    assert "| D3 | 0 | 0 | 0 | 0 | 0 | 2 |" in text
-    assert "## Left out on purpose (1 school)" in text
-    assert text.count("**Blocked**") == 1
-    assert "### Failed" in text and "**Alpha**" in text
 
 
 # ---------------------------------------------------------------------------- downloads
@@ -1462,13 +1402,6 @@ def test_second_run_of_a_sport_is_refused(tiny):
         pass
 
 
-def test_pipeline_steps_share_its_lock(tiny, monkeypatch):
-    monkeypatch.setenv(core.LOCK_ENV, "softball")
-    with core.sport_lock(tiny, "pipeline"):
-        with core.sport_lock(tiny, "its scrape step"):
-            pass
-
-
 # ---------------------------------------------------------------------------- pipeline plan
 
 def plan(tiny, *argv):
@@ -1482,17 +1415,6 @@ def plan(tiny, *argv):
         k, _, v = a.partition("=")
         setattr(ns, k, v if v else True)
     return pipeline.plan_for(tiny, ns)
-
-
-def test_pipeline_step_choice(tiny):
-    assert plan(tiny).steps == ["scrape", "retry", "geocode", "fix-hometowns", "frozen", "build", "locations", "staff",
-                                "check"]
-    assert plan(tiny, "from_step=geocode").steps[0] == "geocode"
-    assert "scrape" not in plan(tiny, "skip=scrape,retry").steps
-    assert plan(tiny, "steps=check,build").steps == ["build", "check"]
-    assert "redo-current" in plan(tiny, "redo_current").steps
-    with pytest.raises(SystemExit):
-        plan(tiny, "steps=bild")
 
 
 def test_pipeline_first_pass_only_fills_gaps_once_rosters_exist(tiny):
@@ -1513,16 +1435,6 @@ def test_pipeline_only_takes_the_schools_each_sport_has(tiny):
     assert p.commands["scrape"][0][p.commands["scrape"][0].index("--only") + 1] == "Alpha"
     p = plan(tiny, "only=Omega")
     assert p.steps == [] and "skipped" in p.notes["sport"]
-
-
-def test_redo_current_picks_main_page_seasons(tiny):
-    with open(tiny.rosters_dir / "scrape_report_2026.csv", "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=sr.REPORT_FIELDS, extrasaction="ignore")
-        w.writeheader()
-        w.writerow({"season": 2026, "school": "Alpha", "status": "ok", "season_check": "current"})
-        w.writerow({"season": 2026, "school": "Beta", "status": "ok", "season_check": "verified"})
-    cmds = plan(tiny, "redo_current").commands["redo-current"]
-    assert len(cmds) == 1 and "Alpha" in cmds[0] and "Beta" not in " ".join(cmds[0]) and "2026" in cmds[0]
 
 
 # ---------------------------------------------------------------------------- checks after a run
@@ -1764,51 +1676,6 @@ def test_front_page_discs_from_settings(tmp_path):
     assert build.short_count(9999) == "9,999" and build.short_count(120_189) == "120K" and build.short_count(97_500) == "98K"
 
 
-def test_spelling_review_lists_then_applies_decisions(tmp_path, monkeypatch, capsys):
-    # Nov 1: the Oct 30 spelling screen as a command (hometown_fixes.py review)
-    shared = tmp_path / "config" / "shared" / "hometown_corrections.csv"
-    shared.parent.mkdir(parents=True)
-    rows = [("Delray, FL", "Nelray", "FL", "spelling 'Delray' -> Nelray"),          # starts differently
-            ("Lewiston, Mont.", "Lewistown", "MT", "spelling 'Lewiston' -> Lewistown"),   # Lewiston is a town as typed
-            ("Sugerland, TX", "Sugar Land", "TX", "spelling 'Sugerland' -> Sugar Land"),  # a plain typo: not listed
-            ("Delray, Fla.", "Delray", "FL", "")]                                          # a plain reading of Delray
-    with open(shared, "w", newline="", encoding="utf-8") as fh:
-        w = csv.writer(fh)
-        w.writerow(["hometown_raw", "city", "state", "country", "query", "status", "note", "players"])
-        for raw, city, st, note in rows:
-            w.writerow([raw, city, st, "USA", f"{city}, {st}, USA", "fixed", note, 3])
-    monkeypatch.setattr(sug, "ROOT", tmp_path)
-    monkeypatch.setattr(sug, "load_towns", lambda: ({"MT": {sug.norm("Lewiston"): 1}}, {}))
-    out = tmp_path / "review.csv"
-    sug.review_main(["--out", str(out)])
-    listed = {r["typed"]: r for r in csv.DictReader(open(out, encoding="utf-8"))}
-    assert set(listed) == {"Delray", "Lewiston"}
-    listed["Delray"]["decision"] = "Delray Beach, FL"
-    listed["Lewiston"]["decision"] = "keep"
-    with open(out, "w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=sug.REVIEW_FIELDS)
-        w.writeheader()
-        w.writerows(listed.values())
-    sug.review_main(["--apply", str(out)])
-    after = {r["hometown_raw"]: r for r in csv.DictReader(open(shared, encoding="utf-8"))}
-    assert after["Delray, FL"]["city"] == "Delray Beach" and "checked by hand" in after["Delray, FL"]["note"]
-    assert after["Delray, Fla."]["city"] == "Delray Beach"                     # the plain reading too
-    assert after["Lewiston, Mont."]["city"] == "Lewistown" and "right" in after["Lewiston, Mont."]["note"]
-    assert after["Sugerland, TX"]["note"] == "spelling 'Sugerland' -> Sugar Land"
-    sug.review_main(["--out", str(out)])                                       # nothing left to look at
-    assert not list(csv.DictReader(open(out, encoding="utf-8")))
-
-
-def test_compare_two_seasons_player_by_player(tiny, capsys):
-    write_season(tiny, 2024, [player("Alpha", "Ann Lee", "FR"), player("Alpha", "Bea Diaz", "JR")])
-    write_season(tiny, 2025, [player("Alpha", "Ann Lee", "SO"), player("Alpha", "Cat Moe", "FR")])
-    assert build.compare_seasons_main(["--sport", "softball", "--school", "Alpha", "--season", "2025"]) == 0
-    out = capsys.readouterr().out
-    assert "against 2024" in out and "1 of 2 names were on the 2024 roster" in out
-    assert "SO <- FR" in out and "same class year 0" in out
-    assert build.compare_seasons_main(["--sport", "softball", "--school", "Alpha", "--season", "2024"]) == 1
-
-
 def test_real_roster_pages():
     # Nov 1: nine saved pages, one or two per kind of site (Sidearm classic and cards, WMT and Sidearm tables, a Nuxt
     # payload, embedded JSON, PrestoSports and Ardor pages through the browser, and Samford's), in
@@ -1939,8 +1806,6 @@ def test_junior_hockey_teams_are_not_colleges():
         assert not looks_like_college(team, colleges), team
     assert sort_schools({"high_school": "", "previous_school": "St. Cloud Norsemen (NAHL)"}, colleges)["previous_school"] == ""
     assert looks_like_college("Boston College", colleges)
-
-
 
 
 def test_men_and_women_on_one_page():

@@ -215,7 +215,7 @@ def write_missing_rosters(report_dir: Path, schools_csv: Path, sport_label: str,
                           gave_up: set[tuple[str, int]] | None = None,
                           rules: sidearm.Rules = sidearm.DEFAULT) -> Path:
     """Write MISSING_ROSTERS.md from every scrape report in report_dir, into out_dir (the sport's
-    rosters/<sport>/ folder, so it's always in the same place, even for a test run with --out).
+    rosters/college/<sport>/ folder, so it's always in the same place, even for a test run with --out).
 
     For each division: schools with a failed season (no roster saved) and schools with a partial one
     (saved, but most players without a hometown), each with its seasons and why. The reason is the

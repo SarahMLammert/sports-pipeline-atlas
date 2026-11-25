@@ -261,7 +261,7 @@ roster page left the staff section empty) or the site loads its staff separately
 coaches page is downloaded instead: /sports/<sport>/coaches/<year> (Sidearm) or the address the Presto page gives
 (/sports/<sport>/2024-25/coaches). --offline skips those downloads.
 
-Writes rosters/<sport>/staff_<season>.csv: season, division, current_conference, school, name, title, role
+Writes rosters/college/<sport>/staff_<season>.csv: season, division, current_conference, school, name, title, role
 (head, associate, assistant, coordinator, graduate, volunteer, support), bio_url, source_url. A season file is
 rewritten as a whole; school-seasons whose roster failed get no staff (there's no page to read).
 """
@@ -415,9 +415,9 @@ def scrape_staff_main(argv=None) -> int:
 BUILD_STAFF_DATA_DOC = """Coaches and staff for the staff pages: one person per name across a sport's schools and seasons, their
 seasons at each school, and their moves between schools.
 
-    python3 scripts/staff.py build --sport football     # rosters/football/staff_*.csv -> docs/football/staff_data.json
+    python3 scripts/staff.py build --sport football     # rosters/college/football/staff_*.csv -> docs/football/staff_data.json
 
-Reads rosters/<sport>/staff_<season>.csv (staff.py scrape) and the schools, conferences and divisions from
+Reads rosters/college/<sport>/staff_<season>.csv (staff.py scrape) and the schools, conferences and divisions from
 docs/<sport>/map_data.json (build.py map, so run that first).
 
 People: the same name in the same sport is the same person ("Mike Smith Jr." and "Mike Smith" too, and "Mike A. Smith"

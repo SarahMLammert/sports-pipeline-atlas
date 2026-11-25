@@ -155,15 +155,15 @@ Steps, in order: `scrape` (quick pass) → `retry` (slow pass with a browser) �
 `--redo-current`) → `geocode` → `fix-hometowns` → `frozen` → `build` → `locations` → `staff` → `check`.
 Useful options: `--rescrape` (every school again, not just what's missing), `--only "A,B"`, `--division D1`,
 `--seasons 2024-2026`, `--retry-given-up`, `--keep-going`. A sport can't be run twice at once (a lock in
-`rosters/<sport>/`). The terminal shows one line per school; long lists go to `rosters/<sport>/notes_*.txt`, and the
-full output to `rosters/<sport>/pipeline.log`.
+`rosters/college/<sport>/`). The terminal shows one line per school; long lists go to `rosters/college/<sport>/notes_*.txt`, and the
+full output to `rosters/college/<sport>/pipeline.log`.
 
 The steps one by one:
 
 | command | does |
 |---|---|
 | `scrape_rosters.py --sport X` | download and read rosters (`--problems` only rewrites `MISSING_ROSTERS.md`) |
-| `geocode.py --sport X` | place hometowns (`rosters/<sport>/hometowns.csv`, `unmatched_hometowns.csv`) |
+| `geocode.py --sport X` | place hometowns (`rosters/college/<sport>/hometowns.csv`, `unmatched_hometowns.csv`) |
 | `hometown_fixes.py suggest --sport X [--accept-likely]` | suggest fixes for unplaced hometowns |
 | `hometown_fixes.py spellings --sport X` | fix misspelled towns from the geocoder's table |
 | `hometown_fixes.py review [--apply FILE]` | list automatic spelling fixes to check by hand, then apply your decisions |
@@ -213,7 +213,7 @@ config/shared/      school_colors.csv, school_locations.csv, hometown_correction
 config/<sport>/     settings.json (roster paths, roster size, positions, divisions, seasons, site words),
                     schools.csv (every college: division, conference, site, seasons, notes),
                     optional: hometown_corrections.csv, wrong_seasons.csv, season_pages.csv
-rosters/<sport>/    working files, not committed: rosters_<season>.csv, scrape reports, MISSING_ROSTERS.md,
+rosters/college/    one folder per sport, not committed: rosters_<season>.csv, scrape reports, MISSING_ROSTERS.md,
                     attempts.csv, hometowns.csv, staff_<season>.csv, notes, logs and rosters.db
 rosters/pro/        the pro rosters, not committed
 docs/               the site: index.html, the six map pages, pro-pipeline.html, sources.html, common.js,
@@ -246,7 +246,7 @@ tests/              test_atlas.py (the code, the parsers, the builds), test_page
   combined page with no such marks is refused rather than guessed at.
 - **Stand-in pages.** Some Sidearm sites show a "General Roster" page for a season a sport has no roster; the scraper
   refuses it (`sidearm.stand_in_page`).
-- **Fixing a school.** See `rosters/<sport>/MISSING_ROSTERS.md`. Set `domain` or `roster_url` in `schools.csv`; list
+- **Fixing a school.** See `rosters/college/<sport>/MISSING_ROSTERS.md`. Set `domain` or `roster_url` in `schools.csv`; list
   a season whose page is really another year in `wrong_seasons.csv`, or give the right page in `season_pages.csv`.
 - **Jersey numbers.** Tidied by `sidearm.clean_jersey` and shown in player lists and careers.
 - **Hometowns.** Read from the roster text (US states, Canadian provinces, countries, hockey's three-letter codes),
@@ -255,7 +255,7 @@ tests/              test_atlas.py (the code, the parsers, the builds), test_page
 - **Transfers.** A player counts as a transfer if the roster names a college as his previous school, he was on another
   school's roster here first, or he arrives as a junior or older. Junior hockey teams are never colleges. Old schools
   get a level (D1, D2, D3, NAIA, JUCO, club, unknown).
-- **The roster database.** `rosters/<sport>/rosters.db` (SQLite) holds the season files, scrape reports and hometown
+- **The roster database.** `rosters/college/<sport>/rosters.db` (SQLite) holds the season files, scrape reports and hometown
   tables, rebuilt from the CSVs whenever one changes, so the CSVs stay the files to edit.
 - **Staff.** Coaches are read from the roster pages (or the coaches page) and matched by name; a move is a person's
   last season at one school followed by their first at another within two seasons.

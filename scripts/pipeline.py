@@ -35,7 +35,7 @@ retry; --rescrape makes it go through every school again. With --only, the schoo
 again in full.
 
 Schools that don't work are skipped: a school-season that came back failed or partial 3 times (counted in
-rosters/<sport>/attempts.csv) isn't tried again; --retry-given-up tries them all again, --give-up-after N changes
+rosters/college/<sport>/attempts.csv) isn't tried again; --retry-given-up tries them all again, --give-up-after N changes
 the 3, and deleting a row from attempts.csv retries one. The current season is always tried. Schools named
 with --only are always tried.
 
@@ -46,7 +46,7 @@ the 2026-27 team; a school that hasn't posted it yet is tried again on the next 
 
 Several sports run one after the other. A sport that fails at a step stops there and the next sport
 goes on; the table at the end says what ran. Everything printed is also saved to
-rosters/<sport>/pipeline.log (send that file when something looks wrong).
+rosters/college/<sport>/pipeline.log (send that file when something looks wrong).
 
 A sport can't run twice at once: a second pipeline or scrape_rosters.py for the same sport stops
 straight away with a message. Two different sports can run side by side in two windows.
@@ -201,7 +201,7 @@ def show(cmd: list[str]) -> str:
 
 
 class Log:
-    """Prints to the screen and to rosters/<sport>/pipeline.log at the same time."""
+    """Prints to the screen and to rosters/college/<sport>/pipeline.log at the same time."""
 
     def __init__(self, path: Path | None):
         self.fh = open(path, "w", encoding="utf-8") if path else None
@@ -356,7 +356,7 @@ def main(argv=None) -> int:
     ap.add_argument("--give-up-after", type=int, metavar="N",
                     help="skip school-seasons that failed or came back partial N times (default 3; 0: never)")
     ap.add_argument("--retry-given-up", action="store_true",
-                    help="try the given-up school-seasons again (see rosters/<sport>/attempts.csv)")
+                    help="try the given-up school-seasons again (see rosters/college/<sport>/attempts.csv)")
     ap.add_argument("--use-review", action="store_true", help="geocode with the 'review' hometown fixes too")
     ap.add_argument("--test", action="store_true", help="run the tests first")
     ap.add_argument("--redo-current", action="store_true",

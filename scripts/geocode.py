@@ -1,6 +1,6 @@
 """Placing hometowns on the map: hometown -> latitude and longitude, from the Census and USGS town lists,
 GeoNames for towns abroad, the corrections files and (with --online) Nominatim. Writes
-rosters/<sport>/hometowns.csv, unmatched_hometowns.csv and suggested fixes.
+rosters/college/<sport>/hometowns.csv, unmatched_hometowns.csv and suggested fixes.
 
     python3 scripts/geocode.py --sport softball
 
@@ -45,7 +45,7 @@ Offline sources (downloaded once into .cache/):
 Optional online source (--online): OpenStreetMap Nominatim for whatever is left
 (foreign cities, typos), 1 request/second, cached in .cache/nominatim.json.
 
-    python scripts/geocode.py                       # the season files in rosters/football/
+    python scripts/geocode.py                       # the season files in rosters/college/football/
     python scripts/geocode.py --online --contact you@example.com
     python scripts/geocode.py --sport mens-basketball
 
@@ -58,7 +58,7 @@ Reads every player from the season files (rosters_<season>.csv), one row per pla
 (built in memory, the same way scrape_rosters.py --combined writes players_unique.csv).
 
 Writes config/<sport>/hometown_corrections.csv (the fix table: status fixed / review / unfixable),
-and in rosters/<sport>/:
+and in rosters/college/<sport>/:
   hometowns.csv               one row per hometown: what the roster said, the town it was read as,
                               lat/lon, where the answer came from, and how many players. Open it
                               to look anything up. Re-runs reuse it, so only new hometowns are
@@ -1193,7 +1193,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=GEOCODE_HOMETOWNS_DOC, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("rosters", type=Path, nargs="?",
                     help="a CSV of players to geocode, also written out as <name>_geocoded.csv "
-                         "(default: every player in the season files in rosters/<sport>/, with no extra file)")
+                         "(default: every player in the season files in rosters/college/<sport>/, with no extra file)")
     add_sport_argument(ap)
     ap.add_argument("--online", action="store_true", help="look up leftovers with OpenStreetMap Nominatim")
     ap.add_argument("--contact", default="anonymous", help="email for the Nominatim User-Agent (their policy)")

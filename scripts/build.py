@@ -57,7 +57,7 @@ from sidearm import Rules, clean_name, sort_schools
 
 BUILD_MAP_DATA_DOC = """Pack a sport's players into the JSON its pages (docs/<sport>/) load.
 
-    python scripts/build.py map                # rosters/football/ -> docs/football/map_data.json
+    python scripts/build.py map                # rosters/college/football/ -> docs/football/map_data.json
     python scripts/build.py map --sport lacrosse-mens
     python scripts/build.py map <input.csv> <output.json>   # a geocoded CSV instead (older runs)
 
@@ -78,7 +78,7 @@ Every other transfer gets the level of the school he came from (scripts/core.py,
 config/<sport>/schools.csv): a D1 school he wasn't found on, Division II or III, NAIA, junior
 college, or unknown (no school named, or a name that fits two levels).
 
-It reads frozen_class_seasons.csv from rosters/<sport>/ and writes transfer_levels.csv there.
+It reads frozen_class_seasons.csv from rosters/college/<sport>/ and writes transfer_levels.csv there.
 """
 
 # The scraper's rules for telling a previous college from a high school, so both steps agree.
@@ -495,7 +495,7 @@ def write_levels_report(matched: Counter, path) -> None:
 def build_map_data_main(argv=None):
     ap = argparse.ArgumentParser(description=BUILD_MAP_DATA_DOC, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("files", nargs="*", type=Path, metavar="input.csv output.json",
-                    help="default: the season files and hometowns.csv in rosters/<sport>/ -> docs/<sport>/map_data.json")
+                    help="default: the season files and hometowns.csv in rosters/college/<sport>/ -> docs/<sport>/map_data.json")
     add_sport_argument(ap)
     args = ap.parse_args(argv)
     sport = load_sport(args.sport)
@@ -570,7 +570,7 @@ A frozen archive scores ~90-100% on both. A season inflated by COVID repeats
 scores high on "all" but normal on "no_sr".
 
 Run:  python scripts/build.py frozen          # add --sport <name> for another sport
-Reads the season files (rosters_<season>.csv) in rosters/<sport>/ and writes rosters/<sport>/frozen_class_seasons.csv
+Reads the season files (rosters_<season>.csv) in rosters/college/<sport>/ and writes rosters/college/<sport>/frozen_class_seasons.csv
 (school, season, share) for the build.
 """
 
@@ -714,7 +714,7 @@ scripts/pipeline.py runs it as its last step. It only reads; it changes nothing.
                 In the autumn that page may already show next spring's roster; pipeline.py --redo-current
                 scrapes those again.
 
-The oversized and repeated lists are also written to rosters/<sport>/roster_checks.csv, with the page
+The oversized and repeated lists are also written to rosters/college/<sport>/roster_checks.csv, with the page
 address each one came from, for checking in a browser.
 """
 
@@ -856,7 +856,7 @@ def check_rosters_main(argv=None) -> int:
         print(f"No season files in {sport.rosters_dir} yet: nothing to check.")
         return 0
 
-    # Everything below reads rosters/<sport>/rosters.db (core.roster_db: rebuilt from the CSVs when they change)
+    # Everything below reads rosters/college/<sport>/rosters.db (core.roster_db: rebuilt from the CSVs when they change)
     con = roster_db(sport.rosters_dir)
     rows = db_rows(con, "SELECT * FROM rosters ORDER BY rowid")
     unique = build_unique(rows)

@@ -193,7 +193,7 @@ def _season_file(path: Path, hometowns: list[str]):
 def sport(tmp_path, monkeypatch, cache):
     config, rosters = tmp_path / "config", tmp_path / "rosters"
     config.mkdir()
-    (rosters / "softball").mkdir(parents=True)
+    (rosters / "college" / "softball").mkdir(parents=True)
     (config / "softball").mkdir()
     (config / "softball" / "settings.json").write_text(json.dumps({"label": "Softball", "d1_divisions": ["D1"]}))
     monkeypatch.setattr(core, "CONFIG", config)
@@ -987,12 +987,12 @@ FIELDS = sr.OUT_FIELDS
 
 @pytest.fixture
 def tiny(tmp_path, monkeypatch):
-    """A project folder with config/softball/settings.json and an empty rosters/softball/."""
+    """A project folder with config/softball/settings.json and an empty rosters/college/softball/."""
     monkeypatch.setattr(core, "ROOT", tmp_path)
     monkeypatch.setattr(core, "CONFIG", tmp_path / "config")
     monkeypatch.setattr(core, "ROSTERS", tmp_path / "rosters")
     (tmp_path / "config" / "softball").mkdir(parents=True)
-    (tmp_path / "rosters" / "softball").mkdir(parents=True)
+    (tmp_path / "rosters" / "college" / "softball").mkdir(parents=True)
     (tmp_path / "config" / "softball" / "settings.json").write_text(json.dumps(SETTINGS))
     with open(tmp_path / "config" / "softball" / "schools.csv", "w", newline="") as f:
         w = csv.writer(f)

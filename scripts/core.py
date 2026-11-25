@@ -58,7 +58,7 @@ def clean(text) -> str:
 #     config/shared/hometown_corrections.csv                     hometown fixes for every sport (yours and the geocoder's)
 #     config/<sport>/hometown_corrections.csv                    a sport's own fixes, only where it differs (optional)
 #     config/<sport>/wrong_seasons.csv, season_pages.csv         roster pages to skip, or to use, for a season (optional)
-#     rosters/<sport>/                                           the rosters (cleaned) and everything else the scripts
+#     rosters/college/<sport>/                                           the rosters (cleaned) and everything else the scripts
 #                                                                write: scrape reports, the geocoder's hometown table,
 #                                                                lists for checking (not committed)
 #     docs/<sport>/                                              the website pages for a sport, and the data they load
@@ -68,7 +68,7 @@ def clean(text) -> str:
 
 ROOT = Path(__file__).resolve().parent.parent          # the repo folder (this file is scripts/core.py)
 CONFIG = ROOT / "config"
-ROSTERS = ROOT / "rosters"
+ROSTERS = ROOT / "rosters"          # rosters/college/<sport>/ and rosters/pro/
 DEFAULT_SPORT = "football"
 
 
@@ -151,7 +151,7 @@ class Sport:
 
     @property
     def rosters_dir(self) -> Path:
-        return ROSTERS / self.name
+        return ROSTERS / "college" / self.name
 
     @property
     def site_dir(self) -> Path:
@@ -1027,7 +1027,7 @@ def season_rows(rosters_dir: Path) -> list[dict]:
 
 
 # ---- the roster database ---------------------------------------------------------------------------------
-# rosters/<sport>/rosters.db holds a sport's season files, scrape reports and hometown tables in one SQLite file,
+# rosters/college/<sport>/rosters.db holds a sport's season files, scrape reports and hometown tables in one SQLite file,
 # for the checks (build.py check, frozen) and the map build. The CSV files stay the source: scrape_rosters.py and
 # geocode.py write them, and the database is rebuilt from them whenever one of them has changed (or is new or
 # gone) since it was built, so it never needs to be refreshed by hand. It's in rosters/, so not in git.
@@ -1105,7 +1105,7 @@ def _build_db(path: Path, files: dict[str, list[Path]], stamp: str) -> None:
 
 
 def roster_db(rosters_dir: Path):
-    """An open connection to rosters/<sport>/rosters.db, rebuilt first if a CSV changed. Rows come back as
+    """An open connection to rosters/college/<sport>/rosters.db, rebuilt first if a CSV changed. Rows come back as
     sqlite3.Row (by name or position); db_rows() turns a query into plain dicts like read_csv's."""
     rosters_dir = Path(rosters_dir)
     path = rosters_dir / DB_FILE

@@ -14,7 +14,7 @@ Examples
 
 Reads config/<sport>/settings.json and config/<sport>/schools.csv (default sport: football).
 
-Outputs (in rosters/<sport>/, or --out). The rosters are all cleaned: no jersey numbers or captain
+Outputs (in rosters/college/<sport>/, or --out). The rosters are all cleaned: no jersey numbers or captain
 marks in names, hometowns split into city/state/country, high school and previous school sorted out.
     rosters_<season>.csv          every player that season, one row each (the later steps read these)
 Only with --combined (for opening in a spreadsheet; nothing else needs them):
@@ -22,7 +22,7 @@ Only with --combined (for opening in a spreadsheet; nothing else needs them):
     players_unique.csv            one row per player per school, with first/last season on the roster
 Only with --report:
     scrape_report_<season>.csv    per school: status, strategy, player counts, URL, errors
-    MISSING_ROSTERS.md            the failed and partial schools by division, with reasons (always in rosters/<sport>/)
+    MISSING_ROSTERS.md            the failed and partial schools by division, with reasons (always in rosters/college/<sport>/)
 
 --retry-failed doesn't need the reports: it tells which school-seasons are done from the saved rosters.
 
@@ -752,7 +752,7 @@ def build_parser() -> argparse.ArgumentParser:
                          "(football: FBS, FCS, D2, D3, NAIA, JUCO; lacrosse-mens: D1, D2, ...)")
     ap.add_argument("--conference", help="only this current conference (as in schools.csv)")
     ap.add_argument("--only", help="comma-separated school names")
-    ap.add_argument("--out", type=Path, help="where the rosters go (default: rosters/<sport>/)")
+    ap.add_argument("--out", type=Path, help="where the rosters go (default: rosters/college/<sport>/)")
     ap.add_argument("--cache", default=ROOT / ".cache" / "html", type=Path)
     ap.add_argument("--workers", type=int, default=6, help="schools scraped in parallel (different sites)")
     ap.add_argument("--delay", type=float, default=1.5, help="seconds between requests to the same site")
@@ -978,7 +978,7 @@ def run(ap: argparse.ArgumentParser, args, sport) -> int:
                  len(no_site), args.schools.name, " (-v lists them)" if not args.verbose else "")
         log.debug("Skipped (closed programs, or sites still to find): %s", ", ".join(no_site))
     def write_missing(gave_up: set | None = None) -> None:
-        # Only with --report. Always in rosters/<sport>/, even when --out sends the rosters somewhere else
+        # Only with --report. Always in rosters/college/<sport>/, even when --out sends the rosters somewhere else
         if not args.report:
             return
         if gave_up is None:

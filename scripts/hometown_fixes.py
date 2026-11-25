@@ -35,7 +35,7 @@ from hometowns import _region, not_a_place, parse_hometown
 SUGGEST_HOMETOWN_FIXES_DOC = """Suggest fixes for hometowns the geocoder couldn't place, and write them to
 config/<sport>/hometown_corrections.csv (default sport: football).
 
-Run it after geocode.py, which writes rosters/<sport>/unmatched_hometowns.csv. Each unmatched
+Run it after geocode.py, which writes rosters/college/<sport>/unmatched_hometowns.csv. Each unmatched
 hometown is checked against a list of about 30,000 US towns (downloaded once to .cache/us_cities.csv
 from github.com/kelvins/US-Cities-Database):
 
@@ -424,7 +424,7 @@ Each pair below is a misspelling found next to the real town (within 25 km, same
 data, checked by hand. Pairs that are two real places (Los Gatos / Los Altos, Monroe / Montrose,
 Grosse Pointe Farms / Park, ...) are left out.
 
-The script finds every raw hometown text in the geocoder's table, rosters/<sport>/hometowns.csv, that was
+The script finds every raw hometown text in the geocoder's table, rosters/college/<sport>/hometowns.csv, that was
 placed in a misspelled town, and writes a "fixed" row for it in config/<sport>/hometown_corrections.csv.
 Rows you already have for those texts are updated; everything else is kept as it is.
 
@@ -480,7 +480,7 @@ SPELLING_FIELDS = ["hometown_raw", "city", "state", "country", "query", "status"
 
 
 def patch_lookup(wrong: dict, lookup: Path) -> tuple[int, int]:
-    """The geocoder keeps every hometown it has placed in rosters/<sport>/hometowns.csv (``lookup``, keyed by the raw text)
+    """The geocoder keeps every hometown it has placed in rosters/college/<sport>/hometowns.csv (``lookup``, keyed by the raw text)
     and reuses those rows before it reads hometown_corrections.csv, so a correction alone never moves
     a hometown it has already placed. Point the misspelled rows at the real town: copy its location
     from the table's own row for that town, or drop the row if the table has none (the next geocode

@@ -684,7 +684,7 @@ def seasons_arg(text: str) -> list[int]:
 def _hometown_places(sport_name: str) -> dict[tuple[str, str], tuple[float, float]]:
     """(hometown text, school or "") -> (lat, lon), from the sport's geocoded hometowns."""
     out = {}
-    for r in read_csv(ROSTERS / sport_name / "hometowns.csv"):
+    for r in read_csv(load_sport(sport_name).rosters_dir / "hometowns.csv"):
         try:
             out[(r["hometown"], r.get("school", ""))] = (round(float(r["lat"]), 4), round(float(r["lon"]), 4))
         except (TypeError, ValueError, KeyError):

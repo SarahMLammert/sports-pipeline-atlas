@@ -1,6 +1,6 @@
 """Writes config/<sport>/settings.json and schools.csv for the sports added on Nov 2, 2026, from the NCAA directory
 and the schools files already here. Safe to run again: it only writes these sports' two files, and leaves a sport
-alone once rosters/<sport>/ exists unless --force is given (a hand fix in its schools.csv would be lost).
+alone once rosters/college/<sport>/ exists unless --force is given (a hand fix in its schools.csv would be lost).
 
     python3 scripts/new_sports.py                  # every sport below
     python3 scripts/new_sports.py wrestling-mens   # one sport
@@ -370,7 +370,7 @@ def main(argv=None) -> int:
         if args.report:
             continue
         folder = CONFIG / s["name"]
-        if (ROOT / "rosters" / s["name"]).exists() and not args.force:
+        if (ROOT / "rosters" / "college" / s["name"]).exists() and not args.force:
             print("    already scraped, left alone (--force to write it)")
             continue
         folder.mkdir(exist_ok=True)

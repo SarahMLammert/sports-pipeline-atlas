@@ -254,7 +254,11 @@
   .legend span { display: inline-flex; align-items: center; gap: 8px; }
 
   /* A clicked sport's maps, in the globe */
-  .center.menu .kicker, .center.menu .title, .center.menu .hint, .center.menu .hsopen { display: none; }
+  .center.menu .kicker, .center.menu .title, .center.menu .hint, .center.menu .hsopen, .center.menu .gseason { display: none; }
+  /* The season showing, in a pill at the top of the globe's words (college maps only) */
+  .gseason { padding: 6px 26px 7px; border-radius: 999px; background: var(--tone); color: #FFFFFF; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+    font: 800 34px/1 'Plus Jakarta Sans', 'Barlow', system-ui, sans-serif; letter-spacing: 0.22em; text-indent: 0.22em; text-transform: uppercase; transition: background 0.6s; }
+  .gseason:empty { display: none; }
   .gmaps { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
   .gmaps[hidden] { display: none; }
   .gname { font-size: 40px; letter-spacing: 0.04em; line-height: 1; color: var(--on-globe); }
@@ -381,10 +385,10 @@
           <path class="grat"/><path class="eq"/>
         </svg>
         <div class="shade" aria-hidden="true"></div>
+        <div class="gseason" data-role="gseason" aria-hidden="true"></div>
         <div class="kicker" data-role="kicker">College</div>
         <h1 class="title cond" data-role="title"></h1>
         <p class="hint" data-role="hint"></p>
-        <div class="gbtns"><button type="button" class="hsopen" data-hs-open aria-label="Search by high school" title="Search by high school"><span class="hs-long">Search by high school</span><span class="hs-short">High schools</span></button><a class="hsopen pro-btn" href="pro-pipeline.html" title="High school to college to the NFL, NBA, MLB and NHL"><span class="hs-long">Pro Pipeline</span><span class="hs-short">Pros</span></a></div>
         <div class="gmaps" id="globeMaps" hidden></div>
       </div>
     </div>
@@ -566,7 +570,7 @@
   // College maps show one season's sports (the season picker); pro maps the four leagues; high school maps are to come.
   const LEVELS = ['hs', 'college', 'pro'];
   const LEVEL_NAME = { hs: 'High school', college: 'College', pro: 'Pro' };
-  const LEVEL_HINT = { hs: 'High school maps are coming. For now, search any high school to see its players in every sport.',
+  const LEVEL_HINT = { hs: 'High school maps are coming soon.',
     college: 'Hover a sport, or click it for all its maps.', pro: 'Pick a league to follow its players from high school and college to the pros.' };
   const hashLevel = () => { const m = /(?:^#|&)level=(\w+)/.exec(location.hash); return m && LEVELS.includes(m[1]) ? m[1] : null; };
   let level = hashLevel() || 'college';
@@ -607,7 +611,10 @@
   })();
   // The season's name, on the orbit at the top; the discs pass over it
   const ringName = () => level === 'college' ? season : level === 'pro' ? 'pro leagues' : 'high school maps · coming soon';
-  const nameSeason = () => { document.getElementById('seasons').innerHTML = `<text class="season" x="${CX}" y="${CY - ORBIT.R}">${ringName()}</text>`; };
+  const nameSeason = () => {
+    document.getElementById('seasons').innerHTML = `<text class="season" x="${CX}" y="${CY - ORBIT.R}">${ringName()}</text>`;
+    document.querySelectorAll('[data-role="gseason"]').forEach((el) => { el.textContent = level === 'college' ? season : ''; });
+  };
   nameSeason();
   const dial = document.getElementById('dial');
 

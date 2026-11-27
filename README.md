@@ -18,33 +18,33 @@ MLB and NHL players traced back to their college rosters.
 
 | sport | folder | schools | players | seasons |
 |---|---|---|---|---|
-| Football | `football` | 831 (FBS, FCS, D2, D3, NAIA, JUCO) | 446K | 2016–2019, 2021–2026 (no 2020) |
-| Baseball | `baseball` | 1,083 (D1, D2, D3, NAIA, JUCO) | 219K | 2016–2027 |
+| Football | `football` | 831 (FBS, FCS, D2, D3, NAIA, JUCO) | 445K | 2016–2019, 2021–2026 (no 2020) |
+| Baseball | `baseball` | 1,083 (D1, D2, D3, NAIA, JUCO) | 218K | 2016–2027 |
 | Softball | `softball` | 1,118 (D1, D2, D3, NAIA, JUCO) | 115K | 2016–2027 |
-| Lacrosse (Men's) | `lacrosse-mens` | 431 (D1, D2, D3, NAIA, JUCO) | 69K | 2016–2027 |
+| Lacrosse (Men's) | `lacrosse-mens` | 430 (D1, D2, D3, NAIA, JUCO) | 69K | 2016–2027 |
 | Lacrosse (Women's) | `lacrosse-womens` | 583 (D1, D2, D3, NAIA, JUCO) | 58K | 2016–2027 |
 | Hockey (Men's) | `hockey-mens` | 162 (NCAA D1, D2, D3) | 20K | 2016–2027 |
-| Hockey (Women's) | `hockey-womens` | 126 (National Collegiate = D1 and D2 schools, D3) | 12K | 2016–2027 |
-| Basketball (Men's) | `basketball-mens` | 1,216 (D1, D2, D3, NAIA, JUCO) | 120K | 2016–2027 |
-| Basketball (Women's) | `basketball-womens` | 1,220 | 99K | 2016–2027 |
+| Hockey (Women's) | `hockey-womens` | 127 (National Collegiate = D1 and D2 schools, D3) | 12K | 2016–2027 |
+| Basketball (Men's) | `basketball-mens` | 1,219 (D1, D2, D3, NAIA, JUCO) | 121K | 2016–2027 |
+| Basketball (Women's) | `basketball-womens` | 1,221 | 99K | 2016–2027 |
 | Volleyball (Women's) | `volleyball-womens` | 1,192 | 98K | 2016–2026 (fall) |
 | Volleyball (Men's) | `volleyball-mens` | 260 | 16K | 2016–2027 |
-| Soccer (Men's) | `soccer-mens` | 950 | 152K | 2016–2026 (fall) |
-| Soccer (Women's) | `soccer-womens` | 1,161 | 149K | 2016–2026 (fall) |
-| Wrestling (Men's) | `wrestling-mens` | 321 | 44K | 2016–2027 |
-| Wrestling (Women's) | `wrestling-womens` | 178 | 9K | 2016–2027 |
+| Soccer (Men's) | `soccer-mens` | 949 | 152K | 2016–2026 (fall) |
+| Soccer (Women's) | `soccer-womens` | 1,161 | 148K | 2016–2026 (fall) |
+| Wrestling (Men's) | `wrestling-mens` | 315 | 44K | 2016–2027 |
+| Wrestling (Women's) | `wrestling-womens` | 175 | 9K | 2016–2027 |
 | Field Hockey | `field-hockey` | 276 (NCAA) | 26K | 2016–2026 (fall) |
 | Water Polo (Men's) | `water-polo-mens` | 50 (NCAA) | 5K | 2016–2026 (fall) |
 | Water Polo (Women's) | `water-polo-womens` | 59 (NCAA) | 5K | 2016–2026 |
 | Rowing (Men's) | `rowing-mens` | 54 (NCAA) | 9K | 2016–2026 |
-| Rowing (Women's) | `rowing-womens` | 137 (NCAA) | 25K | 2016–2026 |
-| Tennis (Men's) | `tennis-mens` | 737 | 36K | 2016–2026 |
+| Rowing (Women's) | `rowing-womens` | 136 (NCAA) | 25K | 2016–2026 |
+| Tennis (Men's) | `tennis-mens` | 735 | 35K | 2016–2026 |
 | Tennis (Women's) | `tennis-womens` | 880 | 38K | 2016–2026 |
 | Golf (Men's) | `golf-mens` | 939 | 43K | 2016–2026 |
 | Golf (Women's) | `golf-womens` | 844 | 27K | 2016–2026 |
-| Cross Country (Men's) | `cross-country-mens` | 1,138 | 75K | 2016–2026 (fall) |
-| Cross Country (Women's) | `cross-country-womens` | 1,188 | 75K | 2016–2026 (fall) |
-| Track & Field (Men's) | `track-mens` | 959 (indoor and outdoor together) | 150K | 2016–2026 |
+| Cross Country (Men's) | `cross-country-mens` | 1,137 | 75K | 2016–2026 (fall) |
+| Cross Country (Women's) | `cross-country-womens` | 1,186 | 75K | 2016–2026 (fall) |
+| Track & Field (Men's) | `track-mens` | 956 (indoor and outdoor together) | 148K | 2016–2026 |
 | Track & Field (Women's) | `track-womens` | 1,035 (indoor and outdoor together) | 141K | 2016–2026 |
 | Swimming & Diving (Men's) | `swimming-mens` | 471 | 43K | 2016–2027 |
 | Swimming & Diving (Women's) | `swimming-womens` | 571 | 55K | 2016–2027 |
@@ -151,7 +151,7 @@ python3 -m ruff check scripts tests                        # the Python linter (
 npm run lint                                               # the site's linter, ESLint
 ```
 
-Steps, in order: `scrape` (quick pass) → `retry` (slow pass with a browser) → `redo-current` (only with
+Steps, in order: `test` (only with `--test`) → `scrape` (quick pass) → `retry` (slow pass with a browser) → `redo-current` (only with
 `--redo-current`) → `geocode` → `fix-hometowns` → `frozen` → `build` → `locations` → `staff` → `check`.
 Useful options: `--rescrape` (every school again, not just what's missing), `--only "A,B"`, `--division D1`,
 `--seasons 2024-2026`, `--retry-given-up`, `--keep-going`. A sport can't be run twice at once (a lock in
@@ -167,6 +167,7 @@ The steps one by one:
 | `hometown_fixes.py suggest --sport X [--accept-likely]` | suggest fixes for unplaced hometowns |
 | `hometown_fixes.py spellings --sport X` | fix misspelled towns from the geocoder's table |
 | `hometown_fixes.py review [--apply FILE]` | list automatic spelling fixes to check by hand, then apply your decisions |
+| `hometown_fixes.py check` | load the geocoder's town lists and look up a few sample towns |
 | `build.py frozen / map / locations / check / pages` | class-year check, map data, campus file, roster check, site pages |
 | `build.py compare --sport X --school S --season Y` | a school's roster against its season before, player by player |
 | `staff.py scrape / build --sport X` | coaches from the roster pages, then the staff data |
